@@ -59,7 +59,6 @@ end
 """
 
 ```julia
-"""
 ```
 """
 macro define(interface, obj, tests, description)
@@ -75,8 +74,7 @@ end
 """
     test_interface(::Type{<:Interface}, obj) 
 
-Test if an interface is implemented for an object,
-returning `true` or `false`.
+Test if an interface is implemented for an object, returning `true` or `false`.
 
 The default return value is `false`.
 """
