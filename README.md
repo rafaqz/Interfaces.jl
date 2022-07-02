@@ -28,13 +28,23 @@ But heres an examples using Animals, and the implementation of a Duck.
 ```julia
 module Animals
 
+using Interfaces
+
+function age end
+function walk end
+function talk end
+function dig end
+
 @interface AnimalInterface begin
-    # tests
+
+    # mandatory components
     @mandatory :age begin
+        # Return a function or tuple of functions for multiple tests
         x -> age(x) isa Int
     end
+
+    # optional components
     @optional :walk begin
-        # Return a tuple of functions
         x -> walk(x) isa String
     end
     @optional :talk begin
@@ -49,10 +59,13 @@ end
 The we can create a Duck and state that it implements the Animals interface:
 
 ```julia
-using Animals
+using Animals, Interfaces
 
 """
     Duck
+
+Duck is an animal that waddles and quacks,
+but cant dig.
 
 $(Interfaces.@document Duck AnimalInterface)
 """
@@ -64,7 +77,7 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements Duck AnimalInterface{(:)} Duck() 
+@implements Duck AnimalInterface{(:)} Duck(2) 
 ```
 
 
