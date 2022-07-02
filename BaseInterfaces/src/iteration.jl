@@ -21,23 +21,24 @@ HasEltype()	eltype(IterType)
 EltypeUnknown()	(none)
 =#
 
-@define IterationInterface x begin
-
+@interface IterationInterface x begin
 
     @mandatory iterate begin
-        @insist isnothing(iterate(x)) "must have two or more elements"
-        @insist isnothing(iterate(iterate(x))) "must have two or more elements"
-        @insist iterate(x) isa Tuple
-        @insist iterate(iterate(x)...) isa Tuple
-    end
-    #= output something like:
-    function implements(::Type{IteratorInterface{:reverse}}, ::Type{<:ObjType}) 
-        true
-    end
-    function conditions(T::Type{IteratorInterface{:interate}, obj)
         (
-            x -> iterate(x) isa Tuple => "iterate(x) isa Tuple",
-            x -> iterate(iterate(x)...) isa Tuple => "iterate(iterate(x)...) isa Tuple",
+            x -> isnothing(iterate(x)),
+            x -> isnothing(iterate(iterate(x))),
+            x -> iterate(x) isa Tuple,
+            x -> iterate(iterate(x)...) isa Tuple
+        )
+    end
+
+    #= output something like:
+    function conditions(T::Type{IteratorInterface{:interate})
+        (
+            x -> isnothing(iterate(x)),
+            x -> isnothing(iterate(iterate(x))),
+            x -> iterate(x) isa Tuple,
+            x -> iterate(iterate(x)...) isa Tuple
         )
     end
     =#
@@ -51,23 +52,26 @@ EltypeUnknown()	(none)
     `size` must be defined`.
     """
     @mandatory size begin
-        @trait Base.IteratorSize [
-             HasLength => @insist length(x) isa Integer
-             HasShape => begin
-                @insist length(x) isa Integer
-                @insist size(x) isa NTuple{<:Any,<:Integer}
-                @insist length(size(x)) == typeof(itsize).parameters[1]
-                @insist length(x) == prod(size(x))
+         x -> begin
+             trait = IteratorSize(x)
+             if trait isa HasLength
+                 x -> length(x) isa Integer
+             elseif trait isa HasShape
+                 (
+                     x -> length(x) isa Integer,
+                     x -> size(x) isa NTuple{<:Any,<:Integer},
+                     x -> length(size(x)) == typeof(itsize).parameters[1],
+                     x -> length(x) == prod(size(x)),
+                 )
+             elseif trait isa Union{IsInfinite,SizeUnknown} 
+                 true
+             else
+                 error("IteratorSize(x) must return `HasLength`, `HasShape`, `IsInfinite` or `SizeUnknown`")
              end
-             IsInfinite
-             SizeUnknown
-        ]
+         end
     end
     #= output something like:
-    function implements(::Type{IteratorInterface{:size}}, ::Type{<:ObjType}) 
-        true
-    end
-    function conditions(T::Type{IteratorInterface{:size}, obj)
+    function conditions(T::Type{IteratorInterface{:size})
         (
             x -> iterate(x) isa Tuple,
             x -> iterate(iterate(x)...),
@@ -76,66 +80,76 @@ EltypeUnknown()	(none)
     =#
 
     @mandatory eltype begin
-        @trait Base.IteratorEltype [
-             HasEltype => @insist eltype(x) == typeof(first(x))
-             EltypeUnknown
-        ]
+        x -> begin
+            Base.IteratorEltype(x) 
+            if trait isa HasEltype 
+                eltype(x) == typeof(first(x))
+            else trait isa EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
+                true
+            end
+        end
     end
     #= output something like:
-    function conditions(T::Type{IteratorInterface{:eltype}, x::ObjType)
-         trait = Base.IteratorEltype(x) 
-         if #19trait isa HasEltype
-             (
-                 x -> eltype(x) == typeof(first(x)) => "`eltype(x) == typeof(first(x))`",
-             )
-         elseif trait isa EltypeUnknown
-             ()
-         else
-             throw(TraitError("trait Base.IteratorEltype(x) must be `<: HasEltype` or `<: EltypeUnknown`, but returns $trait".))
-         end
+    function conditions(T::Type{IteratorInterface{:eltype})
+        x -> begin
+            Base.IteratorEltype(x) 
+            if trait isa HasEltype 
+                @assert eltype(x) == typeof(first(x))
+            else trait isa EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
+                noting
+            end
+        end
     end
     =#
 
     @optional reverse begin
-        @insist collect(Iterators.reverse(x)) == reverse(collect(x))
+        x -> collect(Iterators.reverse(x)) == reverse(collect(x))
     end
     #= output something like:
-    function implements(::Type{IteratorInterface{:reverse}}, ::Type{<:ObjType}) 
-        true
-    end
-    function conditions(T::IteratorInterface{:reverse}, x)
-        (
-            x -> collect(Iterators.reverse(x)) == reverse(collect(x)),
-        )
+    function condition(T::IteratorInterface{:reverse})
+        x -> collect(Iterators.reverse(x)) == reverse(collect(x))
     end
     =#
 
     """
     We force the implementation of `firstindex` and `lastindex`
-    Or it is impossible to test `getindex`
+    Or it is impossible to test `getindex` generically
     """
     @optional indexing begin
-        @insist firstindex(x) isa Integer
-        @insist lastindex(x) isa Integer
-        @insist getindex(x, firstindex(x)) == first(iterate(x))
+        (
+            x -> firstindex(x) isa Integer,
+            x -> lastindex(x) isa Integer,
+            x -> getindex(x, firstindex(x)) == first(iterate(x)),
+        )
     end
     #= output something like:
-    function implements(::Type{IteratorInterface{:indexing}}, ::Type{<:ObjType}) 
-        true
-    end
     function conditions(T::IteratorInterface{:reverse}, x)
         (
-            x -> firstindex(x) isa Integer
-            x -> lastindex(x) isa Integer
-            x -> getindex(x, firstindex(x)) == first(iterate(x))
+            x -> firstindex(x) isa Integer,
+            x -> lastindex(x) isa Integer,
+            x -> getindex(x, firstindex(x)) == first(iterate(x)),
         )
     end
     =#
 
     @optional setindex! begin
-        @needs indexing
-        @insist first(x) != last(x) "should contain no repeated values"
-        @insist (setindex(firstindex(x)) = last(x); first(x) == last(x))
+        @assert first(x) != last(x) "should contain no repeated values"
+        @assert (setindex(firstindex(x)) = last(x); first(x) == last(x))
     end
 end
+#= output something like:
+function conditions(T::Type{IteratorInterface{:interate})
+    (
+        x -> isnothing(iterate(x)),
+        x -> isnothing(iterate(iterate(x))),
+        x -> iterate(x) isa Tuple,
+        x -> iterate(iterate(x)...) isa Tuple
+    )
+end
+...
+...
+...
+mandatory_components(::IteratorInterface) = (:iterate, :size)
+optional_components(::IteratorInterface) = (:reverse, :indexing, setindex!)
+
 

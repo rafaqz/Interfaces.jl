@@ -1,6 +1,8 @@
 using Interfaces
 using Test
 
-@testset "Interfaces.jl" begin
-    # Write your tests here.
-end
+abstract type MyInterface <: Interface end
+
+struct MyObj end
+
+@implements MyObj MyInterface

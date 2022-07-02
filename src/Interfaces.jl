@@ -2,7 +2,7 @@ module Interfaces
 
 using InteractiveUtils
 
-export Interface, @implements, implements
+export Interface, @implements, @defines, implements, 
 
 """
     Interface 
@@ -14,60 +14,90 @@ abstract type Interface end
 implements(::Type{<:Interface}, obj) = false
 
 """
-    @implements 
+@defi, that you may like to implement.ne 
+
+Define an interface
 
 ```julia
-@implements begin
-    MyArray BaseInterfaces.AbstractArray
-end
-```
+""""
+    SomeInterface
 
-```julia
-@implements MyArray BaseInterfaces.AbstractArrayGetindex 
-```
-"""
-macro implements(obj, interface)
-    quote
-        Interfaces.hasimplemented(::Type{<:$interface}, ::Type{<:$obj}) = true
-        __implements__(::Type{<:$obj}) = [obj_interfaces] # Module.__implements__
-        __implements__(::Type{<:$interface}) = [interface_objects] # Module.__implements__
-        __implements__() = interfaces # Module.__implements__
-    end |> esc
-end
-macro implements(obj, interface)
-    quote
-        Interfaces.hasimplemented(::Type{<:$interface}, ::Type{<:$obj}) = true
-        __implements__(::Type{<:$obj}) = [obj_interfaces] # Module.__implements__
-        __implements__(::Type{<:$interface}) = [interface_objects] # Module.__implements__
-        __implements__() = interfaces # Module.__implements__
-    end |> esc
-end
-
-@implements begin 
-    MyArray => BaseInterfaces.AbstractArray{(:getindex,:setindex!,:broadcast)}
-    MyArray => BaseInterfaces.Iteration{(:indexed)}
-    SomeArray => [BaseInterfaces.AbstractArray]
-end
-
-macro document(mod)
-    interfaces = mod.__implements__
-    docstrings = map(interfaces) do T
-        Base.doc(T)
+An interface for some things. This
+""""
+@define MyInterface begin
+    @mandatory size begin
+        len = length(x)
+        @insist length(x) = prod(size(x))
+        @insist ndims(x) = length(size(x))
     end
-end
 
-"""
-
-```julia
+    @optional  begin
+    end
+end 
 ```
 """
-macro define(interface, obj, tests, description)
+macro define(interface, tests, description)
     quote
         abstract type $interface{Options} <: Interfaces.Interface end
         Interfaces.test_interface(::Type{<:$interface}, $obj)
             $tests
         end
     end |> esc
+end
+
+"""
+    @implements(type, obj, interface)
+
+Declare that an interface implements an interface,
+and pass an object or tuple of objects to test it with.
+
+# Example
+
+```julia
+@implementsMyArray [
+        BaseInterfaces.AbstractArray{(:getindex,:setindex!,:broadcast)},
+        BaseInterfaces.Iteration{(:indexed)}
+    ] (MyArray([1, 2, 3]), MyArray(rand(5, 4)))
+```
+"""
+macro implements(T, interface, obj; test_during_precompile=true)
+    precompile = test_during_precompile ? :(let Interfaces.test(interface, T) end) : :(nothing)
+    quote
+        Interfaces.implements(::Type{<:$interface}, ::Type{<:$obj}) = true
+        __implements_interface__(::Type{<:$obj}) = [obj_interfaces] # Module.__implements__
+        __implements_interface__(::Type{<:$interface}) = [interface_objects] # Module.__implements__
+        __implements_interface__() = interfaces # Module.__implements__
+        __interface_test_object__(::Type{T}) = obj
+        $precompile
+    end
+end
+
+_check_obj(::Type{T}, objs::Tuple) where T = @assert obj isa T
+_check_obj(::Type{T}, objs::Tuple) where T = map(o -> _check_obj(T, o), objs)
+
+"""
+    @document 
+
+Macro to insert interface documentation into docs for objects
+That implement them.
+
+# Example 
+
+```julia
+Interfaces.@document MyModule SomInterface
+```
+"""
+macro document(mod)
+    interfaces = mod.__implements__()
+    docstrings = map(interfaces) do T
+        Base.doc(T)
+    end
+end
+
+macro document(mod, interface, interfaces...)
+    docstrings = map((interfaces, interfaces...)) do T
+        Base.doc(T)
+    end
 end
 
 
@@ -90,6 +120,7 @@ function test(obj; scope=:direct)
         test(interface, obj)
     end
 end
+
 
 function list_direct(obj)
     return obj.name.module.__implementations__
