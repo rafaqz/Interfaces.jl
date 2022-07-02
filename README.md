@@ -39,7 +39,6 @@ function dig end
 
     # mandatory components
     @mandatory :age begin
-        # Return a function or tuple of functions for multiple tests
         x -> age(x) isa Int
     end
 
@@ -77,7 +76,7 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements Duck AnimalInterface{(:)} Duck(2) 
+@implements Duck AnimalInterface{(:walk, :talk)} Duck(2) 
 ```
 
 
