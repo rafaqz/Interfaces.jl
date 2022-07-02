@@ -22,8 +22,7 @@ EltypeUnknown()	(none)
 =#
 
 @interface IterationInterface x begin
-
-    @mandatory iterate begin
+    @madatory iterate begin
         (
             x -> isnothing(iterate(x)),
             x -> isnothing(iterate(iterate(x))),
@@ -31,17 +30,6 @@ EltypeUnknown()	(none)
             x -> iterate(iterate(x)...) isa Tuple
         )
     end
-
-    #= output something like:
-    function conditions(T::Type{IteratorInterface{:interate})
-        (
-            x -> isnothing(iterate(x)),
-            x -> isnothing(iterate(iterate(x))),
-            x -> iterate(x) isa Tuple,
-            x -> iterate(iterate(x)...) isa Tuple
-        )
-    end
-    =#
 
     """
     Base.IteratorSize allows return values of
@@ -71,12 +59,6 @@ EltypeUnknown()	(none)
              end
          end
     end
-    #= output something like:
-    function conditions(T::Type{IteratorInterface{:size})
-        ...
-
-    end
-    =#
 
     @mandatory eltype begin
         x -> begin
@@ -88,27 +70,10 @@ EltypeUnknown()	(none)
             end
         end
     end
-    #= Not sure I'm totally happy with this output for traits
-    function conditions(T::Type{IteratorInterface{:eltype})
-        x -> begin
-            Base.IteratorEltype(x) 
-            if trait isa HasEltype 
-                @assert eltype(x) == typeof(first(x))
-            else trait isa EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
-                noting
-            end
-        end
-    end
-    =#
 
     @optional reverse begin
         x -> collect(Iterators.reverse(x)) == reverse(collect(x))
     end
-    #= output something like:
-    function condition(T::IteratorInterface{:reverse})
-        x -> collect(Iterators.reverse(x)) == reverse(collect(x))
-    end
-    =#
 
     """
     We force the implementation of `firstindex` and `lastindex`
@@ -121,34 +86,13 @@ EltypeUnknown()	(none)
             x -> getindex(x, firstindex(x)) == first(iterate(x)),
         )
     end
-    #= output something like:
-    function conditions(T::IteratorInterface{:reverse}, x)
-        (
-            x -> firstindex(x) isa Integer,
-            x -> lastindex(x) isa Integer,
-            x -> getindex(x, firstindex(x)) == first(iterate(x)),
-        )
-    end
-    =#
 
     @optional setindex! begin
-        @assert first(x) != last(x) "should contain no repeated values"
-        @assert (setindex(firstindex(x)) = last(x); first(x) == last(x))
+        (
+            x -> first(x) != last(x) # "should contain no repeated values",
+            x -> (setindex(firstindex(x)) = last(x); first(x) == last(x)),
+        )
     end
 end
-#= output something like:
-function conditions(T::Type{IteratorInterface{:interate})
-    (
-        x -> isnothing(iterate(x)),
-        x -> isnothing(iterate(iterate(x))),
-        x -> iterate(x) isa Tuple,
-        x -> iterate(iterate(x)...) isa Tuple
-    )
-end
-function conditions(T::Type{IteratorInterface{:otherthings})
-    ...
-
-mandatory_components(::IteratorInterface) = (:iterate, :size)
-optional_components(::IteratorInterface) = (:reverse, :indexing, setindex!)
 
 

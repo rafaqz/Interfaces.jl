@@ -1,6 +1,7 @@
 using BaseInterfaces
+using Interfaces
 using Test
 
 @testset "BaseInterfaces.jl" begin
-    # Write your tests here.
+    Interfaces.test_interface(IteratorInterface)
 end
