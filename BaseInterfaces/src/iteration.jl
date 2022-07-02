@@ -66,16 +66,15 @@ EltypeUnknown()	(none)
              elseif trait isa Union{IsInfinite,SizeUnknown} 
                  true
              else
+                 # Error here because its actually breaking the default?
                  error("IteratorSize(x) must return `HasLength`, `HasShape`, `IsInfinite` or `SizeUnknown`")
              end
          end
     end
     #= output something like:
     function conditions(T::Type{IteratorInterface{:size})
-        (
-            x -> iterate(x) isa Tuple,
-            x -> iterate(iterate(x)...),
-        )
+        ...
+
     end
     =#
 
@@ -89,7 +88,7 @@ EltypeUnknown()	(none)
             end
         end
     end
-    #= output something like:
+    #= Not sure I'm totally happy with this output for traits
     function conditions(T::Type{IteratorInterface{:eltype})
         x -> begin
             Base.IteratorEltype(x) 
@@ -146,9 +145,9 @@ function conditions(T::Type{IteratorInterface{:interate})
         x -> iterate(iterate(x)...) isa Tuple
     )
 end
-...
-...
-...
+function conditions(T::Type{IteratorInterface{:otherthings})
+    ...
+
 mandatory_components(::IteratorInterface) = (:iterate, :size)
 optional_components(::IteratorInterface) = (:reverse, :indexing, setindex!)
 
