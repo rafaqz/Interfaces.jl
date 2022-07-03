@@ -39,6 +39,8 @@ Animals.talk(::Duck) = :quack
 
 @implements Animals.AnimalInterface{(:walk,:talk)} Duck Duck(1)
 
+@doc Interfaces.document(Animals.AnimalInterface, Duck) Duck
+
 Interfaces.implementing_module(Animals.AnimalInterface, Duck)
 
 @testset "duck" begin
