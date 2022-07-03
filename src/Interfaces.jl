@@ -24,15 +24,11 @@ implements(::Type{<:Interface}, obj) = false
 
 """
     components(T::Interface)
-    components(T::Interface, obj)
 
 Returns the components of interface tests, as a `NamedTuple` of
 `Tuple` of functions or functors.
 """
 function components end
-function components(::Type{T}, obj) where T
-    components(T)
-end
 
 """
 @interface
@@ -169,11 +165,10 @@ function test(T::Type{<:Interface{Options}}, O::Type) where Options
     test(T, obj)
 end
 function test(T::Type{<:Interface{Options}}, obj) where Options
-    c = components(T, obj)
-    mandatory = _test(c.mandatory, obj) 
-    optional = _test(c.optional[Options], obj)
-    mandatory_failures = keys(mandatory)[collect(map(!, mandatory))]
-    optional_failures = keys(optional)[collect(map(!, optional))]
+    mandatory_results = _test(components(T).mandatory, obj) 
+    optional_results = _test(components(T).optional[Options], obj)
+    mandatory_failures = keys(mandatory_results)[collect(map(!, mandatory_results))]
+    optional_failures = keys(optional_results)[collect(map(!, optional_results))]
     if length(mandatory_failures) > 0 || length(optional_failures) > 0
         error("errors found in required components $mandatory_failures and optional components $optional_failures")
         return false
