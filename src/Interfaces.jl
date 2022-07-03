@@ -166,7 +166,8 @@ function test(T::Type{<:Interface{Options}}, O::Type) where Options
 end
 function test(T::Type{<:Interface{Options}}, obj) where Options
     mandatory_results = _test(components(T).mandatory, obj) 
-    optional_results = _test(components(T).optional[Options], obj)
+    selected_options = NamedTuple{_as_tuple(Options)}(components(T).optional)
+    optional_results = _test(selected_options, obj)
     mandatory_failures = keys(mandatory_results)[collect(map(!, mandatory_results))]
     optional_failures = keys(optional_results)[collect(map(!, optional_results))]
     if length(mandatory_failures) > 0 || length(optional_failures) > 0
@@ -185,6 +186,9 @@ function _test(condition, obj)
         condition(obj)
     end
 end
+
+_as_tuple(x) = (x,)
+_as_tuple(xs::Tuple) = xs
 
 # List interfaces defined for the object in its own module
 function _module_implements(obj)
