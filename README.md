@@ -100,8 +100,10 @@ true
 julia> Interfaces.test(AnimalInterface{:dig}, Duck)
 false
 
-# Or our own custom object
-julia> Interfaces.test(AnimalInterface{:dig}, Int)
+# Test another object
+struct Chicken end
+
+julia> Interfaces.implements(Animals.AnimalInterface, Chicken()) 
 false
 ```
 
