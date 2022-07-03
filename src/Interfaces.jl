@@ -151,35 +151,72 @@ returning `true` or `false`.
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-test(T::Type{<:Interface}, O::Type) = test(T{optional_keys(T, O)}, O)
-test(T::Type{<:Interface}, obj) = test(T{optional_keys(T, obj)}, obj)
-function test(T::Type{<:Interface{Options}}, O::Type) where Options
+function test(T::Type{<:Interface{Keys}}, O::Type; kw...) where Keys 
+    T1 = _get_type(T).name.wrapper
+    mod = implementing_module(T1, O)
+    obj = mod.__interface_test_object__(T1, O)
+    return test(T1, obj; keys=Keys, _O=O)
+end
+function test(T::Type{<:Interface}, O::Type; kw...)
     mod = implementing_module(T, O)
     obj = mod.__interface_test_object__(T, O)
-    test(T, obj)
+    return test(T, obj; _O=O, kw...)
 end
-function test(T::Type{<:Interface{Options}}, obj) where Options
-    mandatory_results = _test(components(T).mandatory, obj) 
-    selected_options = NamedTuple{_as_tuple(Options)}(components(T).optional)
-    optional_results = _test(selected_options, obj)
-    mandatory_failures = keys(mandatory_results)[collect(map(!, mandatory_results))]
-    optional_failures = keys(optional_results)[collect(map(!, optional_results))]
-    if length(mandatory_failures) > 0 || length(optional_failures) > 0
-        error("errors found in required components $mandatory_failures and optional components $optional_failures")
-        return false
+function test(T::Type{<:Interface}, obj; show=true, keys=nothing, _O=typeof(obj))
+    if show 
+        print("Testing ")
+        printstyled(_get_type(T).name.name; color=:blue)
+        print(" is implemented for ")
+        printstyled(_O, "\n"; color=:blue)
+    end
+    if isnothing(keys)
+        optional = NamedTuple{optional_keys(T, obj)}(components(T).optional)
+        mandatory_results = _test(components(T).mandatory, obj) 
+        optional_results = _test(optional, obj)
+        if show 
+            _showresults(mandatory_results, "Mandatory components")
+            _showresults(optional_results, "Optional components")
+        end
+        return all(_bool(mandatory_results)) && all(_bool(optional_results))
     else
-        return true
+        allcomponents = merge(components(T)...)
+        optional = NamedTuple{_as_tuple(keys)}(allcomponents)
+        results = _test(optional, obj)
+        _showresults(results, "Specified components")
+        return all(_bool(results))
     end
 end
 
-_test(tests::NamedTuple, obj) = map(t -> _test(t, obj), tests)
-function _test(condition, obj)
-    if condition isa Tuple
-        all(map(f -> f(obj), condition))
-    else
-        condition(obj)
+
+function _showresults(results::NamedTuple, title::String)
+    printstyled(title; color=:light_black)
+    println()
+    foreach(keys(results), results) do k, res
+        print("$k : ")
+        _showresult(k, res)
+        println()
     end
 end
+
+_showresult(key, res) = show(res)
+_showresult(key, res::Bool) = printstyled(res; color=(res ? :green : :red))
+function _showresult(key, res::NTuple{<:Any,Bool})
+    _showresult(key, first(res))
+    map(r -> (print(", "); _showresult(key, r)), Base.tail(res))
+end
+function _showresult(key, res::NTuple{<:Any})
+    _showresult(key, first(res))
+    spacer = join([' ' for i in 1:length(string(key)) + 3])
+    map(r -> (print(",\n$spacer"); _showresult(key, r)), Base.tail(res))
+end
+
+_test(tests::NamedTuple, obj) = map(t -> _test(t, obj), tests)
+_test(condition::Tuple, obj) = map(c -> _test(c, obj), condition)
+_test(condition, obj) = condition(obj)
+
+_bool(xs::Union{Tuple,NamedTuple,AbstractArray}) = all(map(_bool, xs))
+_bool(x::Bool) = x
+_bool(x) = convert(Bool, x)
 
 _all_in(items::Tuple, collection) = all(map(in(collection), items))
 _all_in(item::Symbol, collection) = in(item, collection)

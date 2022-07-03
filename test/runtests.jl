@@ -3,7 +3,9 @@ using Test
 
 module Animals
 
-using Interfaces
+using Interfaces, Invariants
+
+using Invariants: invariant, md
 
 function age end
 function walk end
@@ -19,9 +21,18 @@ function dig end
             ),
         ),
         optional = (
-            walk = x -> walk(x) isa String,
-            talk = x -> talk(x) isa Symbol,
-            dig = x -> dig(x) isa String,
+            walk = (invariant("`walk` returns a `String`") do x
+                walk(x) isa String ? nothing : md("return value is not a `String`")
+            end,
+            invariant("`walk` returns a `String`") do x
+                walk(x) isa String ? nothing : md("return value is not a `String`")
+            end,),
+            talk = invariant("`talk` returns a `Symbol`") do x
+                talk(x) isa Symbol ? nothing : md("return value is not a `Symbol`")
+            end,
+            dig = invariant("`dig` returns a `String`") do x
+                dig(x) isa String ? nothing : md("return value is not a `String`")
+            end,
         )
     )
 end
@@ -53,5 +64,5 @@ Interfaces.implementing_module(Animals.AnimalInterface, Duck)
 
     struct Chicken end
 
-    @test Interfaces.implements(Animals.AnimalInterface, Chicken()) == false
+    @test Interfaces.implements(Animals.AnimalInterface{(:walk,:talk)}, Chicken()) == false
 end

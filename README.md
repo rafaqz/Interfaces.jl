@@ -35,22 +35,27 @@ function walk end
 function talk end
 function dig end
 
-@interface AnimalInterface begin
-    (
-        mandatory = (
-            age = (
-                x -> age(x) isa Real, 
-                x -> age(x) >= 0,
-            )
-        )
-    ,
-        optional = (
-            walk = x -> walk(x) isa String,
-            talk = x -> talk(x) isa Symbol,
-            dig = x -> dig(x) isa String,
+#= @interface takes two argumens
+1. The name of the interface, which should usingaally take the form "_____Interface"
+2. The `mandatory` and `optional` components of the interface written as a `NamedTuple`,
+  with functions or tuple of functions that test them. These will soon include objects
+  from Invariants.jl - the idea is to add allow error messages from another package,
+  but accept simple `Bool` return values.
+=#
+@interface AnimalInterface (
+    mandatory = (
+        age = (
+            x -> age(x) isa Real, 
+            x -> age(x) >= 0,
         )
     )
-end
+,
+    optional = (
+        walk = x -> walk(x) isa String,
+        talk = x -> talk(x) isa Symbol,
+        dig = x -> dig(x) isa String,
+    )
+)
 
 end
 ```
@@ -60,14 +65,6 @@ The we can create a Duck and state that it implements the Animals interface:
 ```julia
 using Animals, Interfaces
 
-"""
-    Duck
-
-Duck is an animal that waddles and quacks,
-but cant dig.
-
-$(Interfaces.@document Duck AnimalInterface)
-"""
 struct Duck
     age::Int
 end
@@ -76,7 +73,13 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements Duck AnimalInterface{(:walk, :talk)} Duck(2)
+#= @implements takes three arguments.
+1. The interface type, with a tuple of optional components in
+  its first type parameter. 
+2. The the type of the object implementing the interface
+3. Some code that defines an instance of that type that can be used in tests.  =#
+
+@implements AnimalInterface{(:walk, :talk)} Duck Duck(2)
 ```
 
 
