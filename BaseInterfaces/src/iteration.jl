@@ -21,78 +21,62 @@ HasEltype()	eltype(IterType)
 EltypeUnknown()	(none)
 =#
 
-@interface IterationInterface x begin
-    @madatory iterate begin
-        (
-            x -> isnothing(iterate(x)),
-            x -> isnothing(iterate(iterate(x))),
+
+@interface IterationInterface (
+    mandatory = (
+        iterate = (
+            x -> !isnothing(iterate(x)),
+            x -> !isnothing(iterate(iterate(x))),
             x -> iterate(x) isa Tuple,
-            x -> iterate(iterate(x)...) isa Tuple
-        )
-    end
+            x -> iterate(iterate(x)...) isa Tuple,
+        ),
 
-    """
-    Base.IteratorSize allows return values of
-    `HasLength()`, `HasShape{N}()`, `IsInfinite()`, or `SizeUnknown()`.
+        #=
+        Base.IteratorSize allows return values of
+        `HasLength()`, `HasShape{N}()`, `IsInfinite()`, or `SizeUnknown()`.
 
-    `HasLength()` is the default. This means that by default `length` 
-    must be defined for the object. If `HasShape{N}()` is returned, `length` and
-    `size` must be defined`.
-    """
-    @mandatory size begin
-         x -> begin
-             trait = IteratorSize(x)
-             if trait isa HasLength
-                 x -> length(x) isa Integer
-             elseif trait isa HasShape
-                 (
-                     x -> length(x) isa Integer,
-                     x -> size(x) isa NTuple{<:Any,<:Integer},
-                     x -> length(size(x)) == typeof(itsize).parameters[1],
-                     x -> length(x) == prod(size(x)),
-                 )
-             elseif trait isa Union{IsInfinite,SizeUnknown} 
-                 true
-             else
-                 # Error here because its actually breaking the default?
-                 error("IteratorSize(x) must return `HasLength`, `HasShape`, `IsInfinite` or `SizeUnknown`")
-             end
-         end
-    end
+        `HasLength()` is the default. This means that by default `length` 
+        must be defined for the object. If `HasShape{N}()` is returned, `length` and
+        `size` must be defined`.
 
-    @mandatory eltype begin
-        x -> begin
-            Base.IteratorEltype(x) 
-            if trait isa HasEltype 
-                eltype(x) == typeof(first(x))
-            else trait isa EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
-                true
-            end
-        end
-    end
+        TODO: use Invariants.jl for this
+        =#
 
-    @optional reverse begin
-        x -> collect(Iterators.reverse(x)) == reverse(collect(x))
-    end
+        # haslength = (
+        #     x -> IteratorSize(x) == Base.HasLength(),
+        #     x -> length(x) isa Integer,
+        # )
+        # hasshape = (
+        #     x -> IteratorSize(x) == isa Base.HasShape
+        #     x -> length(x) isa Integer,
+        #     x -> size(x) isa NTuple{<:Any,<:Integer},
+        #     x -> length(size(x)) == typeof(IteratorSize(x)).parameters[1],
+        #     x -> length(x) == prod(size(x)),
+        # )
+        # isinfinie = x -> IteratorSize(x) == isa Base.IsInfinite(),
+        # sizeunknown = x -> IteratorSize(x) == isa Base.SizeUnknown(),
+        # eltype = x -> begin
+        #     trait = Base.IteratorEltype(x) 
+        #     if trait isa Base.HasEltype 
+        #         eltype(x) == typeof(first(x))
+        #     else trait isa Base.EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
+        #         true
+        #     end
+        # end,
+    ),
 
-    """
-    We force the implementation of `firstindex` and `lastindex`
-    Or it is impossible to test `getindex` generically
-    """
-    @optional indexing begin
-        (
+    optional = (
+        reverse = x -> collect(Iterators.reverse(x)) == reverse(collect(x)),
+        #=
+        We force the implementation of `firstindex` and `lastindex`
+        Or it is hard to test `getindex` generically
+        =#
+        indexing = (
             x -> firstindex(x) isa Integer,
             x -> lastindex(x) isa Integer,
             x -> getindex(x, firstindex(x)) == first(iterate(x)),
-        )
-    end
-
-    @optional setindex! begin
-        (
-            x -> first(x) != last(x) # "should contain no repeated values",
-            x -> (setindex(firstindex(x)) = last(x); first(x) == last(x)),
-        )
-    end
-end
+        ),
+    )
+)
 
 

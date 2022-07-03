@@ -9,13 +9,13 @@ Macros for defining the required behaviours of Julia interfaces,
 and stating that an object implements them.
 
 The goal is to get as much as possible out of defining an interface,
-specifically: 
+specifically:
 
 - Traits: All `@implements` declarations produce compile-time traits that can be
   checked by other packages - for the whole interface and all of it's optional
   components.
 - Tests: `@implements` declarations are automatically tested againts the interfaces
-  and subtypes they define, during precompilation. 
+  and subtypes they define, during precompilation.
 - Docs: interface documentation can be inserted into trait documentation.
 
 ## Example
@@ -36,22 +36,22 @@ function talk end
 function dig end
 
 @interface AnimalInterface begin
+    (
+        mandatory = (
+            age = (
+                x -> age(x) isa Real, 
+                x -> age(x) >= 0,
+            )
+        )
+    ,
+        optional = (
+            walk = x -> walk(x) isa String,
+            talk = x -> talk(x) isa Symbol,
+            dig = x -> dig(x) isa String,
+        )
+    )
+end
 
-    # mandatory components
-    @mandatory :age begin
-        x -> age(x) isa Int
-    end
-
-    # optional components
-    @optional :walk begin
-        x -> walk(x) isa String
-    end
-    @optional :talk begin
-        x -> talk(x) isa Symbol
-    end
-    @optional :dig begin
-        x -> dig(x) isa String
-    end
 end
 ```
 
@@ -76,7 +76,7 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements Duck AnimalInterface{(:walk, :talk)} Duck(2) 
+@implements Duck AnimalInterface{(:walk, :talk)} Duck(2)
 ```
 
 
@@ -89,18 +89,21 @@ true
 julia> Interfaces.implements(AnimalInterface{:dig}, Duck)
 false
 
-# We can get the functions for any interface component tests
-julia> Interfaces.conditions(AnimalInterface{:dig})
-(var"#3#4"(),)
+# We can test the interface
+julia> Interfaces.test(AnimalInterface, Duck)
+true
 
-# And test them
+# Or components of it:
 julia> Interfaces.test(AnimalInterface{(:walk,:talk)}, Duck)
 true
 
 julia> Interfaces.test(AnimalInterface{:dig}, Duck)
 false
+
+# Or our own custom object
+julia> Interfaces.test(AnimalInterface{:dig}, Int)
+false
 ```
 
-By the way, none of this works at all yet! but soon it will. 
 If you think it should behave differently or there is better syntax,
 please make an issue.

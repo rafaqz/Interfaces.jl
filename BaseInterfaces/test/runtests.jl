@@ -3,5 +3,8 @@ using Interfaces
 using Test
 
 @testset "BaseInterfaces.jl" begin
-    Interfaces.test_interface(IteratorInterface)
+    @test Interfaces.test(IterationInterface, StepRange)
+    @test Interfaces.test(IterationInterface, Array)
+    @test Interfaces.test(IterationInterface, Base.Generator)
+    @test Interfaces.test(IterationInterface, Tuple)
 end

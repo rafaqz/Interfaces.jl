@@ -1,87 +1,121 @@
 module Interfaces
 
-using InteractiveUtils
-
-export Interface, @implements, @defines, implements, 
+export Interface, @implements, @interface, implements
 
 """
-    Interface 
+    Interface{Components}
 
 Abstract supertype for all interfaces.
-"""
-abstract type Interface end
 
+Components is an `NTuple` of `Symbol`.
+"""
+abstract type Interface{Components} end
+
+function implementing_module end
+optional_keys(T::Type{<:Interface}, obj) = optional_keys(T, typeof(obj)) 
+optional_keys(T::Type{<:Interface}, obj::Type) = ()
+
+"""
+    (T::Interface)
+
+Returns whether an object implements and interface, as a `Bool`.
+"""
 implements(::Type{<:Interface}, obj) = false
 
 """
-@defi, that you may like to implement.ne 
+    components(T::Interface)
+    components(T::Interface, obj)
 
-Define an interface
+Returns the components of interface tests, as a `NamedTuple` of
+`Tuple` of functions or functors.
+"""
+function components end
+function components(::Type{T}, obj) where T
+    components(T)
+end
+
+"""
+@interface
+
+Define an interface.
 
 ```julia
-""""
-    SomeInterface
-
-An interface for some things. This
-""""
-@define MyInterface begin
-    @mandatory size begin
-        len = length(x)
-        @insist length(x) = prod(size(x))
-        @insist ndims(x) = length(size(x))
-    end
-
-    @optional  begin
-    end
-end 
+@interface MyInterface begin
+    mandatory = (
+        length = x -> length(x) = prod(size(x)),
+        ndims = x -> ndims(x) = length(size(x)),
+    ),
+    optional = (;)
+end
 ```
 """
-macro define(interface, tests, description)
+macro interface(interface, components::Expr)
     quote
-        abstract type $interface{Options} <: Interfaces.Interface end
-        Interfaces.test_interface(::Type{<:$interface}, $obj)
-            $tests
-        end
+        # Define the interface type (should it be concrete?)
+        abstract type $interface{Components} <: Interfaces.Interface{Components} end
+        # Define the interface methods
+        Interfaces.components(::Type{<:$interface}) = $components
     end |> esc
 end
 
 """
-    @implements(type, obj, interface)
+    @implements(interface, objtype, obj)
 
-Declare that an interface implements an interface,
-and pass an object or tuple of objects to test it with.
+Declare that an interface implements an interface, or
+multipleinterfaces.
+
+Also pass an object or tuple of objects to test it with.
+
+The macro can only be used once per module for any one type.
+To define multiple interfaces a type implements, combine them
+in square brackets.
 
 # Example
 
 ```julia
-@implementsMyArray [
-        BaseInterfaces.AbstractArray{(:getindex,:setindex!,:broadcast)},
-        BaseInterfaces.Iteration{(:indexed)}
-    ] (MyArray([1, 2, 3]), MyArray(rand(5, 4)))
+@implements BaseInterfaces.Iteration{(:indexed,)} MyArray MyArray([1, 2, 3])
 ```
 """
-macro implements(T, interface, obj; test_during_precompile=true)
-    precompile = test_during_precompile ? :(let Interfaces.test(interface, T) end) : :(nothing)
-    quote
-        Interfaces.implements(::Type{<:$interface}, ::Type{<:$obj}) = true
-        __implements_interface__(::Type{<:$obj}) = [obj_interfaces] # Module.__implements__
-        __implements_interface__(::Type{<:$interface}) = [interface_objects] # Module.__implements__
-        __implements_interface__() = interfaces # Module.__implements__
-        __interface_test_object__(::Type{T}) = obj
-        $precompile
+macro implements(interface, objtype, obj)
+    if interface isa Expr && interface.head == :curly
+        interfacetype = interface.args[1]    
+        optional_keys = interface.args[2]
+    else
+        interfacetype = interface
+        optional_keys = ()
     end
+    quote
+        # Define a trait stating that `objtype` implements `interface`
+        Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
+        Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
+            Interfaces._all_in(Options, Interfaces.optional_keys(T, O))
+        Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
+        Interfaces.implementing_module(::Type{<:$interfacetype}, ::Type{<:$objtype}) = @__MODULE__
+
+        # Define the Module.__implements__ methods, for lookups both ways
+        __implements__(x::$objtype) = __implements__(typeof(x))
+        __implements__(::Type{<:$objtype}) = $interfacetype
+
+        # Define Module.__interface_test_object__ method
+        __interface_test_object__(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $obj
+
+
+        # Run tests in precompilation
+        Interfaces.test($interface, $objtype)
+    end |> esc
 end
 
-_check_obj(::Type{T}, objs::Tuple) where T = @assert obj isa T
-_check_obj(::Type{T}, objs::Tuple) where T = map(o -> _check_obj(T, o), objs)
+_all_in(items::Tuple, collection) = all(map(in(collection), items))
+_all_in(item::Symbol, collection) = in(item, collection)
+
 
 """
-    @document 
+    @document
 
 Macro to insert interface documentation into docs for objects
 That implement them.
 
-# Example 
+# Example
 
 ```julia
 Interfaces.@document MyModule SomInterface
@@ -93,7 +127,6 @@ macro document(mod)
         Base.doc(T)
     end
 end
-
 macro document(mod, interface, interfaces...)
     docstrings = map((interfaces, interfaces...)) do T
         Base.doc(T)
@@ -102,42 +135,96 @@ end
 
 
 """
-    test_interface(::Type{<:Interface}, obj) 
+    test(obj)
+    test(::Type{<:Interface}, obj)
 
-Test if an interface is implemented for an object, returning `true` or `false`.
+Test if an interface is implemented correctly for an object,
+returning `true` or `false`.
 
-The default return value is `false`.
+If no interface type is passed, Interfaces.jl will find all the
+interfaces available and test them.
 """
-test_interface(::Type{<:Interface}, obj) = false
-
+function test(T::Type; kw...)
+    mod =  implementing_module(T, O)
+    test(mod.__interface_test_object__(T); kw...)
+end
 function test(obj; scope=:direct)
+    # Get all the interfaces an object implements
     interfaces = if scope == :direct
-        list_direct(obj)
+        _module_implements(obj)
     else
-        list_all(obj)
+        _any_implements(obj)
     end
+
+    # Run `test` for all the interfaces.
     for interface in interfaces
         test(interface, obj)
     end
 end
-
-
-function list_direct(obj)
-    return obj.name.module.__implementations__
+test(T::Type{<:Interface}, O::Type) = test(T{optional_keys(T, O)}, O)
+test(T::Type{<:Interface}, obj) = test(T{optional_keys(T, obj)}, obj)
+function test(T::Type{<:Interface{Options}}, O::Type) where Options
+    mod = implementing_module(T, O)
+    obj = mod.__interface_test_object__(T, O)
+    test(T, obj)
+end
+function test(T::Type{<:Interface{Options}}, obj) where Options
+    c = components(T, obj)
+    mandatory = _test(c.mandatory, obj) 
+    optional = _test(c.optional[Options], obj)
+    mandatory_failures = keys(mandatory)[collect(map(!, mandatory))]
+    optional_failures = keys(optional)[collect(map(!, optional))]
+    if length(mandatory_failures) > 0 || length(optional_failures) > 0
+        error("errors found in required components $mandatory_failures and optional components $optional_failures")
+        return false
+    else
+        return true
+    end
 end
 
-function list_all(obj)
+_test(tests::NamedTuple, obj) = map(t -> _test(t, obj), tests)
+function _test(condition, obj)
+    if condition isa Tuple
+        all(map(f -> f(obj), condition))
+    else
+        condition(obj)
+    end
+end
+
+# List interfaces defined for the object in its own module
+function _module_implements(obj)
+    filter(_all_interfaces()) do interface
+        implementing_module(interface, obj) == _get_module(obj) && implements(interface, obj)
+    end
+end
+
+# List all interfaces defined for the object type.
+function _any_implements(obj)
+    filter(_all_interfaces()) do interface
+        implements(interface, obj)
+    end
+end
+
+# Walk the subtype tree of `Interface` to find interfaces
+# that are defined for the object
+function _all_interfaces(T=Interface)
     interfaces = Type[]
-    _add_interfaces!(interfaces, Interface, obj)
+    _add_interfaces!(interfaces, Interface)
 end
 
-function _add_interfaces!(interfaces, T, obj)
+_get_module(obj) = _get_type(obj).name.module
+
+_get_type(obj) = _get_type(typeof(obj))
+_get_type(T::Type) = T
+_get_type(T::UnionAll) = _get_type(T.body)
+
+function _add_interfaces!(interfaces, T)
     st = subtypes(T)
     if isempty(st)
         push!(interfaces, T)
     else
         for T in subtypes(T)
-            _add_interfaces!(interfaces, T, obj)
+            _add_interfaces!(interfaces, T)
         end
     end
     return interfaces
