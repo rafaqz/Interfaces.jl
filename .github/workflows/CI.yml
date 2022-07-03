@@ -19,7 +19,6 @@ jobs:
       matrix:
         version:
           - '1.6'
-          - '1.7'
           - 'nightly'
         os:
           - ubuntu-latest
@@ -29,10 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
-        with:
+        uith:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
+      - run: julia --project -e 'using Pkg; Pkg.add(; url="https://github.com/lorenzoh/Invariants.jl")'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
