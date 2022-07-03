@@ -28,7 +28,7 @@ EltypeUnknown()	(none)
             x -> !isnothing(iterate(x)),
             x -> !isnothing(iterate(iterate(x))),
             x -> iterate(x) isa Tuple,
-            x -> iterate(iterate(x)...) isa Tuple,
+            x -> iterate(x, last(iterate(x))) isa Tuple,
         ),
 
         #=
