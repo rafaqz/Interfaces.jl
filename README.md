@@ -42,22 +42,20 @@ function dig end
   from Invariants.jl - the idea is to add allow error messages from another package,
   but accept simple `Bool` return values.
 =#
-@interface AnimalInterface begin
-    (
-        mandatory = (
-            age = (
-                x -> age(x) isa Real, 
-                x -> age(x) >= 0,
-            )
-        )
-    ,
-        optional = (
-            walk = x -> walk(x) isa String,
-            talk = x -> talk(x) isa Symbol,
-            dig = x -> dig(x) isa String,
+@interface AnimalInterface (
+    mandatory = (
+        age = (
+            x -> age(x) isa Real, 
+            x -> age(x) >= 0,
         )
     )
-end
+,
+    optional = (
+        walk = x -> walk(x) isa String,
+        talk = x -> talk(x) isa Symbol,
+        dig = x -> dig(x) isa String,
+    )
+)
 
 end
 ```
@@ -67,14 +65,6 @@ The we can create a Duck and state that it implements the Animals interface:
 ```julia
 using Animals, Interfaces
 
-"""
-    Duck
-
-Duck is an animal that waddles and quacks,
-but cant dig.
-
-$(Interfaces.@document Duck AnimalInterface)
-"""
 struct Duck
     age::Int
 end

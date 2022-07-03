@@ -5,10 +5,10 @@ version = "0.1.0"
 
 [deps]
 Invariants = "115d0255-0791-41d2-b533-80bc4cbe6c10"
+InvariantsCore = "69cbffe8-09de-43b1-81db-93034495284f"
 
 [compat]
 julia = "1.6"
-Invariants = "0.1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
