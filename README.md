@@ -73,7 +73,7 @@ The `@implements` macro takes three arguments.
 2. The the type of the object implementing the interface
 3. Some code that defines an instance of that type that can be used in tests. 
 
-```
+```julia
 using Interfaces
 
 # Define our Duck object
