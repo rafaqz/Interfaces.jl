@@ -1,4 +1,6 @@
 #=
+From the Base julia interface docs:
+
 Required methods		Brief description
 iterate(iter)		        Returns either a tuple of the first item and initial state or nothing if empty
 iterate(iter, state)		Returns either a tuple of the next item and next state or nothing if no items remain
@@ -21,60 +23,68 @@ HasEltype()	eltype(IterType)
 EltypeUnknown()	(none)
 =#
 
-
 @interface IterationInterface (
+    # Mandatory conditions: these must be met by all types
+    # that implement the interface.
     mandatory = (
+        # :iterate returns a Tuple of anonymous functions
+        # that will each be tested for some object `x`.
         iterate = (
-            x -> !isnothing(iterate(x)),
-            x -> !isnothing(iterate(iterate(x))),
-            x -> iterate(x) isa Tuple,
-            x -> iterate(x, last(iterate(x))) isa Tuple,
+            "test objects must be longer than 1" => x -> !isnothing(iterate(x)),
+            "test objects must be longer than 2" => x -> !isnothing(iterate(iterate(x))),
+            "iterate must return a tuple" => x -> iterate(x) isa Tuple,
+            "iteration on the last `iterate` output works" => x -> iterate(x, last(iterate(x))) isa Tuple,
         ),
-
-        #=
-        Base.IteratorSize allows return values of
-        `HasLength()`, `HasShape{N}()`, `IsInfinite()`, or `SizeUnknown()`.
-
-        `HasLength()` is the default. This means that by default `length` 
-        must be defined for the object. If `HasShape{N}()` is returned, `length` and
-        `size` must be defined`.
-
-        TODO: use Invariants.jl for this
-        =#
-
-        # haslength = (
-        #     x -> IteratorSize(x) == Base.HasLength(),
-        #     x -> length(x) isa Integer,
-        # )
-        # hasshape = (
-        #     x -> IteratorSize(x) == isa Base.HasShape
-        #     x -> length(x) isa Integer,
-        #     x -> size(x) isa NTuple{<:Any,<:Integer},
-        #     x -> length(size(x)) == typeof(IteratorSize(x)).parameters[1],
-        #     x -> length(x) == prod(size(x)),
-        # )
-        # isinfinie = x -> IteratorSize(x) == isa Base.IsInfinite(),
-        # sizeunknown = x -> IteratorSize(x) == isa Base.SizeUnknown(),
-        # eltype = x -> begin
-        #     trait = Base.IteratorEltype(x) 
-        #     if trait isa Base.HasEltype 
-        #         eltype(x) == typeof(first(x))
-        #     else trait isa Base.EltypeUnknown || error("IteratorEltype(x) must return `HasEltype` or `EltypeUnknown`")
-        #         true
-        #     end
-        # end,
+        # :size demonstrates an interface condition that instead of return a Bool,
+        # returns a Tuple of functions to run for `x` depending on the IteratorSize
+        # trait.
+        size = x -> begin
+            sizetrait = Base.IteratorSize(typeof(x))
+            if sizetrait isa Base.HasLength
+                return (
+                    "`length(x)` returns an Integer for HasLength objects" => x -> length(x) isa Integer,
+                )
+            elseif sizetrait isa Base.HasShape 
+                return (
+                    "`length(x)` returns an Integer for HasShape objects" => x -> length(x) isa Integer,
+                    "`size(x)` returns a Tuple of Integer for HasShape objects" => x -> size(x) isa NTuple{<:Any,<:Integer},
+                    "`size(x)` returns a Tuple of length `N` matching `HasShape{N}`" => x -> length(size(x)) == typeof(sizetrait).parameters[1],
+                    "`length(x)` is the product of `size(x)` for `HasShape` objects" => x -> length(x) == prod(size(x)),
+                )
+            elseif sizetrait isa Base.IsInfinite
+                return true
+            elseif sizetrait isa Base.SizeUnknown
+                return true
+            else
+                error("IteratorSize returns $sizetrait, allowed options are: `HasLength`, `HasLength`, `IsInfinite`, `SizeUnknown`")
+            end
+        end,
+        eltype = x -> begin
+            eltypetrait = Base.IteratorEltype(x) 
+            if eltypetrait isa Base.HasEltype 
+                x -> typeof(first(x)) <: eltype(x) 
+            elseif eltypetrait isa Base.EltypeUnknown 
+                true
+            else
+                error("IteratorEltype(x) returns $eltypetrait, allowed options are `HasEltype` or `EltypeUnknown`")
+            end
+        end,
     ),
 
+    # Optional conditions. These should be specified in the
+    # interface type if an object implements them: IterationInterface{(:reverse,:indexing)}
     optional = (
-        reverse = x -> collect(Iterators.reverse(x)) == reverse(collect(x)),
+        # :reverse returns a single function to test Iterators.reverse
+        reverse = "`Iterators.reverse` gives reverse iteration" => x -> collect(Iterators.reverse(x)) == reverse(collect(x)),
         #=
+        :indexing returns three condition functions.
         We force the implementation of `firstindex` and `lastindex`
         Or it is hard to test `getindex` generically
         =#
         indexing = (
-            x -> firstindex(x) isa Integer,
-            x -> lastindex(x) isa Integer,
-            x -> getindex(x, firstindex(x)) == first(iterate(x)),
+            "`firstindex` returns an Integer" => x -> firstindex(x) isa Integer,
+            "`lastindex` returns an Integer" => x -> lastindex(x) isa Integer,
+            "`getindex(x, firstindex(x))` returns the first value of `iterate(x)`" => x -> getindex(x, firstindex(x)) == first(iterate(x)),
         ),
     )
 )

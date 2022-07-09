@@ -18,23 +18,35 @@ function implements end
 implements(::Type{<:Interface}, obj) = false
 
 """
-    test_object(::Type{<:Interface}, ::Type)
+    test_objects(::Type{<:Interface}, ::Type)
 
 Return the test object for an `Interface` and type.
 """
-function test_object end
+function test_objects end
+
+# Wrap objects so we don't get confused iterating
+# inside the objects themselves during tests.
+struct TestObjectWrapper{O}
+    objects::O
+end
+
+Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
+Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
+Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
 
 """
     @implements(interface, objtype, obj)
+    @implements(dev, interface, objtype, obj)
 
-Declare that an interface implements an interface, or
-multipleinterfaces.
+Declare that an interface implements an interface, or multipleinterfaces.
 
 Also pass an object or tuple of objects to test it with.
 
-The macro can only be used once per module for any one type.
-To define multiple interfaces a type implements, combine them
-in square brackets.
+The macro can only be used once per module for any one type. To define
+multiple interfaces a type implements, combine them in square brackets.
+
+Passing the keyword `dev` as the first argument lets us show test output during development.
+Do not use `dev` in production code, or output will appear during package precompilation.
 
 # Example
 
@@ -46,7 +58,14 @@ using BaseInterfaces
 @implements BaseInterfaces.IterationInterface{(:indexing,:reverse)} MyObject MyObject([1, 2, 3])
 ```
 """
-macro implements(interface, objtype, obj)
+macro implements(interface, objtype, test_objects)
+    _implements_inner(interface, objtype, test_objects)
+end
+macro implements(dev::Symbol, interface, objtype, test_objects)
+    dev == :dev || error("4 arg version of `@implements must start with `dev`, and should only be used in testing")
+    _implements_inner(interface, objtype, test_objects; show=true)
+end
+function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
         optional_keys = interface.args[2]
@@ -54,6 +73,8 @@ macro implements(interface, objtype, obj)
         interfacetype = interface
         optional_keys = ()
     end
+    test_objects.head == :vect || error("test object must be wrapped in square brackets")
+    test_objects = Expr(:tuple, test_objects.args...)
     quote
         # Define a `implements` trait stating that `objtype` implements `interface`
         Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
@@ -62,9 +83,9 @@ macro implements(interface, objtype, obj)
         # Define which optional components the object implements
         Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
         # Define the object to be used in interface tests
-        Interfaces.test_object(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $obj
+        Interfaces.test_objects(::Type{<:$interfacetype}, ::Type{<:$objtype}) = Interfaces.TestObjectWrapper($test_objects)
         # Run tests during precompilation
-        Interfaces.test($interface, $objtype; show=false)
+        Interfaces.test($interface, $objtype; show=$show)
     end |> esc
 end
 

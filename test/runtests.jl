@@ -10,24 +10,23 @@ function walk end
 function talk end
 function dig end
 
-@interface AnimalInterface begin
-    (
-        mandatory = (
-            age = (
-                 x -> age(x) isa Real,
-                 x -> age(x) >= 0,
-            ),
+@interface AnimalInterface (
+    mandatory = (
+        age = (
+             "all animals have a `Real` age" => x -> age(x) isa Real,
+             "all animals have an age larger than zero" => x -> age(x) >= 0,
         ),
-        optional = (
-            walk = x -> walk(x) isa String,
-            talk = x -> talk(x) isa Symbol,
-            dig = x -> dig(x) isa String,
-        )
+    ),
+    optional = (
+        walk = "this animal can walk" => x -> walk(x) isa String,
+        talk = "this animal can talk" => x -> talk(x) isa Symbol,
+        dig = "this animal can dig" => x -> dig(x) isa String,
     )
-end
+) """
+Defines a generic interface for animals to do the things they do best.
+"""
 
 end
-
 
 struct Duck
     age::Int
@@ -37,11 +36,7 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements Animals.AnimalInterface{(:walk,:talk)} Duck Duck(1)
-
-@doc Interfaces.document(Animals.AnimalInterface, Duck) Duck
-
-Interfaces.implementing_module(Animals.AnimalInterface, Duck)
+@implements dev Animals.AnimalInterface{(:walk,:talk)} Duck [Duck(1), Duck(2)]
 
 @testset "duck" begin
     @test Interfaces.implements(Animals.AnimalInterface, Duck) == true
@@ -50,8 +45,11 @@ Interfaces.implementing_module(Animals.AnimalInterface, Duck)
     @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck) == true
     # TODO wrap errors somehow, or just let Invariants.jl handle that.
     @test_throws MethodError Interfaces.test(Animals.AnimalInterface{:dig}, Duck)
+end
 
-    struct Chicken end
+struct Chicken end
 
-    @test Interfaces.implements(Animals.AnimalInterface, Chicken()) == false
+@testset "chicken" begin
+    @test Interfaces.implements(Animals.AnimalInterface{(:walk,:talk)}, Chicken()) == false
+    @test_throws MethodError Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Chicken())
 end

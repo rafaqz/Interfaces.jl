@@ -8,27 +8,29 @@ returning `true` or `false`.
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type{<:Interface{Keys}}, O::Type; kw...) where Keys 
+function test(T::Type{<:Interface{Keys}}, O::Type; kw...) where Keys
     T1 = _get_type(T).name.wrapper
-    obj = test_object(T1, O)
-    return test(T1, obj; keys=Keys, _O=O, kw...)
+    objs = test_objects(T1, O)
+    return test(T1, O, objs; keys=Keys, kw...)
 end
 function test(T::Type{<:Interface}, O::Type; kw...)
-    obj = test_object(T, O)
-    return test(T, obj; _O=O, kw...)
+    objs = test_objects(T, O)
+    return test(T, O, objs; kw...)
 end
-function test(T::Type{<:Interface}, obj; show=true, keys=nothing, _O=typeof(obj))
-    if show 
+function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
+    show=true, keys=nothing
+)
+    if show
         print("Testing ")
         printstyled(_get_type(T).name.name; color=:blue)
         print(" is implemented for ")
-        printstyled(_O, "\n"; color=:blue)
+        printstyled(O, "\n"; color=:blue)
     end
     if isnothing(keys)
-        optional = NamedTuple{optional_keys(T, obj)}(components(T).optional)
-        mandatory_results = _test(components(T).mandatory, obj) 
-        optional_results = _test(optional, obj)
-        if show 
+        optional = NamedTuple{optional_keys(T, O)}(components(T).optional)
+        mandatory_results = _test(components(T).mandatory, objs)
+        optional_results = _test(optional, objs)
+        if show
             _showresults(mandatory_results, "Mandatory components")
             _showresults(optional_results, "Optional components")
         end
@@ -37,16 +39,50 @@ function test(T::Type{<:Interface}, obj; show=true, keys=nothing, _O=typeof(obj)
     else
         allcomponents = merge(components(T)...)
         optional = NamedTuple{_as_tuple(keys)}(allcomponents)
-        results = _test(optional, obj)
+        results = _test(optional, objs)
         show && _showresults(results, "Specified components")
         println()
         return all(_bool(results))
     end
 end
+# Convenience method for users to test a single object
+test(T::Type{<:Interface}, obj; kw...) =
+    test(T, typeof(obj), TestObjectWrapper((obj,)); kw...)
 
-_test(tests::NamedTuple, obj) = map(t -> _test(t, obj), tests)
-_test(condition::Tuple, obj) = map(c -> _test(c, obj), condition)
-_test(condition, obj) = condition(obj)
+function _test(tests::NamedTuple{K}, objs::TestObjectWrapper) where K
+    map(keys(tests), values(tests)) do k, v
+        _test(k, v, objs)
+    end |> NamedTuple{K}
+end
+function _test(name::Symbol, condition::Tuple, objs, i=nothing)
+    map(condition, ntuple(identity, length(condition))) do c, i
+        _test(name, c, objs, i)
+    end
+end
+function _test(name::Symbol, condition::Tuple, objs::TestObjectWrapper, i=nothing)
+    map(condition, ntuple(identity, length(condition))) do c, i
+        _test(name, c, objs, i)
+    end
+end
+function _test(name::Symbol, condition, objs::TestObjectWrapper, i=nothing)
+    map(o -> _test(name, condition, o, i), objs.objects)
+end
+function _test(name::Symbol, condition, obj, i=nothing)
+    try
+        res = condition isa Pair ? condition[2](obj) : condition(obj)
+        # Allow returning a function or tuple of functions that are tested again
+        if res isa Union{Pair,Tuple,Base.Callable}
+            return _test(name, res, obj, i)
+        else
+            return condition isa Pair ? condition[1] => res : res
+        end
+    catch e
+        num = isnothing(i) ? "" : ", condition $i"
+        desc = condition isa Pair ? string(" \"", condition[1], "\"") : ""
+        @warn "interface test :$name$num$desc failed for test object $obj"
+        rethrow(e)
+    end
+end
 
 function _showresults(results::NamedTuple, title::String)
     printstyled(title; color=:light_black)
@@ -59,6 +95,11 @@ function _showresults(results::NamedTuple, title::String)
 end
 
 _showresult(key, res) = show(res)
+function _showresult(key, pair::Pair)
+    desc, res = pair
+    print(desc, ": ")
+    printstyled(res; color=(res ? :green : :red))
+end
 _showresult(key, res::Bool) = printstyled(res; color=(res ? :green : :red))
 function _showresult(key, res::NTuple{<:Any,Bool})
     _showresult(key, first(res))
@@ -71,6 +112,7 @@ function _showresult(key, res::NTuple{<:Any})
 end
 
 _bool(xs::Union{Tuple,NamedTuple,AbstractArray}) = all(map(_bool, xs))
+_bool(x::Pair) = x[2]
 _bool(x::Bool) = x
 _bool(x) = convert(Bool, x)
 
