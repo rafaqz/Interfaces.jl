@@ -30,11 +30,9 @@ optional properties of the interface, with conditions, using the `@interface`
 macro.
 
 The `@interface` macro takes two argumens
-1. The name of the interface, which should usingaally end with "Interface"
+1. The name of the interface, which should usully end with "Interface"
 2. The `mandatory` and `optional` components of the interface written as a `NamedTuple`,
-  with functions or tuple of functions that test them. These will soon include objects
-  from Invariants.jl - the idea is to add allow error messages from packages
-  built for that, but alse accept simple anonymous functions with `Bool` return values.
+  with functions or tuple of functions that test them.
 
 ```julia
 module Animals
@@ -87,7 +85,7 @@ Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
 # And define the interface
-@implements Animals.AnimalInterface{(:walk, :talk)} Duck Duck(2)
+@implements Animals.AnimalInterface{(:walk, :talk)} Duck [Duck(1), Duck(2)]
 ```
 
 Now we have some methods we can use as traits, and test the interface with:
