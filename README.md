@@ -18,6 +18,8 @@ specifically:
   and subtypes they define, during precompilation.
 - Docs: interface documentation can be inserted into trait documentation.
 
+__Note: the syntax here is likely to change over 2022 as we work out the best ways to define interfaces__
+
 ## Example
 
 See the `IterationInterface` in BaseInterfaces.jl (a subpackage of this package)
