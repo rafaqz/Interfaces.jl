@@ -89,4 +89,19 @@ EltypeUnknown()	(none)
     )
 )
 
+@implemens ArrayInterface (
+    mandatory = (
+        indices = begin
+            carinds = CartesianIndices(axes(x))
+            lininds = eachindex(IndexLinear(), x)
+            test1 = x -> length(lininds) == length(carinds) == length(x) == prod(size(x))
+            test2 = x -> map((l, c) -> x[li] == x[ci], lininds, carinds) 
+            (test1, test2)
+        end, 
+    )
+    optional = (
+        setindex! = x -> ...
+        broadcast = x -> ...
+    )
+)
 
