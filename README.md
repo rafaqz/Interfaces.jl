@@ -14,8 +14,7 @@ specifically:
 - Traits: All `@implements` declarations produce compile-time traits that can be
   checked by other packages - for the whole interface and all of it's optional
   components.
-- Tests: `@implements` declarations are automatically tested againts the interfaces
-  and subtypes they define, during precompilation.
+- Tests: `@implements` declarations should be tested in package tests.
 - Docs: interface documentation can be inserted into trait documentation.
 
 __Note: the syntax here is likely to change over 2022 as we work out the best ways to define interfaces__
