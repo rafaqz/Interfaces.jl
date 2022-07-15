@@ -84,8 +84,7 @@ function _implements_inner(interface, objtype, test_objects; show=false)
         Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
         # Define the object to be used in interface tests
         Interfaces.test_objects(::Type{<:$interfacetype}, ::Type{<:$objtype}) = Interfaces.TestObjectWrapper($test_objects)
-        # Run tests during precompilation
-        Interfaces.test($interface, $objtype; show=$show)
+        nothing
     end |> esc
 end
 

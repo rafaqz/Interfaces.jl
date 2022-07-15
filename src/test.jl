@@ -34,14 +34,12 @@ function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
             _showresults(mandatory_results, "Mandatory components")
             _showresults(optional_results, "Optional components")
         end
-        println()
         return all(_bool(mandatory_results)) && all(_bool(optional_results))
     else
         allcomponents = merge(components(T)...)
         optional = NamedTuple{_as_tuple(keys)}(allcomponents)
         results = _test(optional, objs)
         show && _showresults(results, "Specified components")
-        println()
         return all(_bool(results))
     end
 end
