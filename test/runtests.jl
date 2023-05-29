@@ -36,15 +36,16 @@ Animals.age(duck::Duck) = duck.age
 Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
-@implements dev Animals.AnimalInterface{(:walk,:talk)} Duck [Duck(1), Duck(2)]
+@implements dev Animals.AnimalInterface{(:walk,:talk)} Duck
 
 @testset "duck" begin
+    ducks = [Duck(1), Duck(2)]
     @test Interfaces.implements(Animals.AnimalInterface, Duck) == true
     @test Interfaces.implements(Animals.AnimalInterface{:dig}, Duck) == false
-    @test Interfaces.test(Animals.AnimalInterface, Duck) == true
-    @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck) == true
+    @test Interfaces.test(Animals.AnimalInterface, Duck, ducks) == true
+    @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks) == true
     # TODO wrap errors somehow, or just let Invariants.jl handle that.
-    @test_throws MethodError Interfaces.test(Animals.AnimalInterface{:dig}, Duck)
+    @test_throws MethodError Interfaces.test(Animals.AnimalInterface{:dig}, Duck, ducks)
 end
 
 struct Chicken end
