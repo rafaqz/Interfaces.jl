@@ -1,3 +1,12 @@
+# Wrap objects so we don't get confused iterating
+# inside the objects themselves during tests.
+struct TestObjectWrapper{O}
+    objects::O
+end
+
+Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
+Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
+Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
 
 """
     test(::Type{<:Interface}, obj)
@@ -8,13 +17,13 @@ returning `true` or `false`.
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type{<:Interface{Keys}}, O::Type; kw...) where Keys
+function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Keys
     T1 = _get_type(T).name.wrapper
-    objs = test_objects(T1, O)
+    objs = TestObjectWrapper(test_objects)
     return test(T1, O, objs; keys=Keys, kw...)
 end
-function test(T::Type{<:Interface}, O::Type; kw...)
-    objs = test_objects(T, O)
+function test(T::Type{<:Interface}, O::Type, test_objects; kw...)
+    objs = TestObjectWrapper(test_objects)
     return test(T, O, objs; kw...)
 end
 function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;

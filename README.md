@@ -66,11 +66,10 @@ end
 
 Now we can implement the AnimalInterface, for a Duck.
 
-The `@implements` macro takes three arguments.
+The `@implements` macro takes two arguments.
 1. The interface type, with a tuple of optional components in
   its first type parameter. 
-2. The the type of the object implementing the interface
-3. Some code that defines an instance of that type that can be used in tests. 
+2. The type for which the interface is implemented.
 
 ```julia
 using Interfaces
@@ -86,7 +85,7 @@ Animals.walk(::Duck) = "waddle"
 Animals.talk(::Duck) = :quack
 
 # And define the interface
-@implements Animals.AnimalInterface{(:walk, :talk)} Duck [Duck(1), Duck(2)]
+@implements Animals.AnimalInterface{(:walk, :talk)} Duck
 ```
 
 Now we have some methods we can use as traits, and test the interface with:
@@ -99,17 +98,17 @@ julia> Interfaces.implements(Animals.AnimalInterface{:dig}, Duck)
 false
 
 # We can test the interface
-julia> Interfaces.test(Animals.AnimalInterface, Duck)
+julia> Interfaces.test(Animals.AnimalInterface, Duck, [Duck(1), Duck(2)])
 true
 
 # Or components of it:
-julia> Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck)
+julia> Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, [Duck(1), Duck(2)])
 true
 
-# Test another object
+# Test another type
 struct Chicken end
 
-julia> Interfaces.implements(Animals.AnimalInterface, Chicken()) 
+julia> Interfaces.implements(Animals.AnimalInterface, Chicken) 
 false
 ```
 
