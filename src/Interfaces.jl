@@ -1,6 +1,9 @@
-module Interfaces
+"""
+    Interfaces
 
-@doc read(joinpath(dirname(@__DIR__), "README.md"), String) Interfaces
+A Julia package for specifying and testing interfaces (conditions verified by a set of methods applied to a type).
+"""
+module Interfaces
 
 export @implements, @interface
 

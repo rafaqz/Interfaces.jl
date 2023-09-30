@@ -32,7 +32,7 @@ makedocs(;
         "Home" => "index.md",
         "API reference" => "api.md",
         "Examples" => [
-            "Single argument" => "animals.md",
+            "Basic" => "animals.md",
         ]
     ],
 )

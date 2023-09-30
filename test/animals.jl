@@ -1,6 +1,6 @@
-# # Single-argument interface
+# # Basic
 
-# Here's an examples using animals, and the implementation of a duck.
+# Here's an example of single-argument interface using animals, and the implementation of a duck.
 
 # ## Definition
 
