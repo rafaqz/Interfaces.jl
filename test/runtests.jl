@@ -42,6 +42,8 @@ Animals.talk(::Duck) = :quack
     ducks = [Duck(1), Duck(2)]
     @test Interfaces.implements(Animals.AnimalInterface, Duck) == true
     @test Interfaces.implements(Animals.AnimalInterface{:dig}, Duck) == false
+    @test @inferred Interfaces.implemented_trait(Animals.AnimalInterface{:walk}, Duck) == Interfaces.Implemented{Animals.AnimalInterface{:walk}}()
+    @test @inferred Interfaces.implemented_trait(Animals.AnimalInterface{:dig}, Duck) == Interfaces.NotImplemented{Animals.AnimalInterface{:dig}}()
     @test Interfaces.test(Animals.AnimalInterface, Duck, ducks) == true
     @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks) == true
     # TODO wrap errors somehow, or just let Invariants.jl handle that.
