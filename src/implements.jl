@@ -15,7 +15,8 @@ Without specifying `Options`, the return value specifies that at least
 all the mandatory components of the interace are implemented.
 """
 function implements end
-implements(::Type{<:Interface}, obj) = false
+implements(T::Type{<:Interface}, obj) = implements(T, typeof(obj))
+implements(::Type{<:Interface}, obj::Type) = false
 
 """
     @implements(interface, objtype)
@@ -67,3 +68,23 @@ end
 
 _all_in(items::Tuple, collection) = all(map(in(collection), items))
 _all_in(item::Symbol, collection) = in(item, collection)
+
+struct Implemented{T<:Interface} end
+struct NotImplemented{T<:Interface} end
+
+"""
+    implemented_trait(T::Type{<:Interface}, obj)
+    implemented_trait(T::Type{<:Interface{Option}}, obj)
+
+Provides a single type for using interface implementation
+as a trait.
+
+Returns `Implemented{T}()` or `NotImplemented{T}`.
+"""
+function implemented_trait(::Type{T}, obj) where T<:Interface
+    if implements(T, obj)
+        Implemented{T}()
+    else
+        NotImplemented{T}()
+    end
+end
