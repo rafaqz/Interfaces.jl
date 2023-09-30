@@ -8,6 +8,15 @@ Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
 Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
 Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
 
+function check_coherent_types(O::Type, tow::TestObjectWrapper)
+    for obj in tow
+        coherent_types = obj isa O || (obj isa Arguments && first_field_type(typeof(obj)) <: O)
+        if !coherent_types
+            throw(ArgumentError("Each tested object must either be an instance of $O or an instance of Arguments whose first field type is $O"))
+        end
+    end
+end
+
 """
     test(::Type{<:Interface}, obj)
 
@@ -29,6 +38,7 @@ end
 function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     show=true, keys=nothing
 )
+    check_coherent_types(O, objs)
     if show
         print("Testing ")
         printstyled(_get_type(T).name.name; color=:blue)
