@@ -8,8 +8,6 @@
 Macros for defining the required behaviours of Julia interfaces,
 and stating that an object implements them.
 
-## Goal
-
 The goal is to get as much as possible out of defining an interface,
 specifically:
 
@@ -113,8 +111,6 @@ struct Chicken end
 julia> Interfaces.implements(Animals.AnimalInterface, Chicken) 
 false
 ```
-
-## Contributing
 
 If you think it should behave differently or there is better syntax,
 please make an issue.
