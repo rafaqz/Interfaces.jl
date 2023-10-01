@@ -79,7 +79,7 @@ struct NotImplemented{T<:Interface} end
 Provides a single type for using interface implementation
 as a trait.
 
-Returns `Implemented{T}()` or `NotImplemented{T}`.
+Returns `Implemented{T}()` or `NotImplemented{T}()`.
 """
 function implemented_trait(::Type{T}, obj) where T<:Interface
     if implements(T, obj)
