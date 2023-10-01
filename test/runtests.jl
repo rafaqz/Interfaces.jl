@@ -1,5 +1,8 @@
 using Interfaces
 using Test
+using Aqua
+
+Aqua.test_all(Interfaces)
 
 module Animals
 
