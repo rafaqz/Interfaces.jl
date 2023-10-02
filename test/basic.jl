@@ -27,15 +27,15 @@ function dig end
 @interface AnimalInterface (
     mandatory = (
         age = (
-             "all animals have a `Real` age" => x -> age(x) isa Real,
-             "all animals have an age larger than zero" => x -> age(x) >= 0,
+            "all animals have a `Real` age" => x -> age(x) isa Real,
+            "all animals have an age larger than zero" => x -> age(x) >= 0,
         ),
     ),
     optional = (
         walk = "this animal can walk" => x -> walk(x) isa String,
         talk = "this animal can talk" => x -> talk(x) isa Symbol,
         dig = "this animal can dig" => x -> dig(x) isa String,
-    )
+    ),
 ) """
 Defines a generic interface for animals to do the things they do best.
 """
@@ -60,6 +60,10 @@ Animals.talk(::Duck) = :quack
 
 ducks = [Duck(1), Duck(2)]
 Interfaces.test(Animals.AnimalInterface, Duck, ducks)
+
+# As well as two optional methods
+
+Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
 
 #=
 Finally we declare it, so that the information can be used in static dispatch.

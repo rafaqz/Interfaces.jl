@@ -45,12 +45,9 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Examples" => ["Basic" => "basic.md", "Advanced" => "advanced.md"],
         "API reference" => "api.md",
-        "Examples" => [
-            "Basic" => "basic.md",
-            "Advanced" => "advanced.md"
-        ]
-    ]
+    ],
 )
 
 deploydocs(;

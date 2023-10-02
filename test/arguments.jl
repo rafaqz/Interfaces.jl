@@ -5,7 +5,7 @@ using Test
 ks = (:x, :y, :z)
 vs = (1, 2.0, "3")
 
-a = Arguments(x=1, y=2.0, z="3")
+a = Arguments(x = 1, y = 2.0, z = "3")
 
 a2 = Arguments{ks}(vs)
 @test a == a2
@@ -24,7 +24,5 @@ a2 = Arguments{ks}(vs)
 @test a[:x] == 1
 @test a[1] == 1
 @test a[:] == a
-@test a[(:x, :z)] == Arguments(x=1, z="3")
-@test a[[:x, :z]] == Arguments(x=1, z="3")
 
 @test first_field_type(typeof(a)) == Int

@@ -10,7 +10,7 @@ using Aqua
     @testset "Aqua" begin
         Aqua.test_all(Interfaces)
     end
-    
+
     # Real tests
     @testset "Arguments" begin
         include("arguments.jl")
