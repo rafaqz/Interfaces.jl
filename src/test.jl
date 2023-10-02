@@ -27,15 +27,21 @@ If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
 function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Keys
+    # Allow passing the keys in the abstract type
+    # But get them out and put them in the `keys` keyword
     T1 = _get_type(T).name.wrapper
     objs = TestObjectWrapper(test_objects)
-    return test(T1, O, objs; keys=Keys, kw...)
+    # And run the tests on the parameterless type
+    return _test(T1, O, objs; keys=Keys, kw...)
 end
 function test(T::Type{<:Interface}, O::Type, test_objects; kw...)
     objs = TestObjectWrapper(test_objects)
-    return test(T, O, objs; kw...)
+    return _test(T, O, objs; kw...)
 end
-function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
+# Convenience method for users to test a single object
+test(T::Type{<:Interface}, obj; kw...) = test(T, typeof(obj), (obj,); kw...)
+
+function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     show=true, keys=nothing
 )
     check_coherent_types(O, objs)
@@ -62,9 +68,6 @@ function test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
         return all(_bool(results))
     end
 end
-# Convenience method for users to test a single object
-test(T::Type{<:Interface}, obj; kw...) =
-    test(T, typeof(obj), TestObjectWrapper((obj,)); kw...)
 
 function _test(tests::NamedTuple{K}, objs::TestObjectWrapper) where K
     map(keys(tests), values(tests)) do k, v
