@@ -41,21 +41,26 @@ function components end
 Define an interface.
 
 ```julia
-@interface MyInterface (
+components = (
     mandatory = (
         length = x -> length(x) = prod(size(x)),
         ndims = x -> ndims(x) = length(size(x)),
     ),
     optional = (;)
-) "A description of the interface"
+)
+description = "A description of the interface"
+
+@interface MyInterface components description
 ```
 """
-macro interface(interface::Symbol, components::Expr, description::String="")
+macro interface(interface::Symbol, components, description)
     quote
         # Define the interface type (should it be concrete?)
         abstract type $interface{Components} <: Interfaces.Interface{Components} end
         # Define the interface component methods
+        @assert $components isa NamedTuple{(:mandatory,:optional)}
         Interfaces.components(::Type{<:$interface}) = $components
+        @assert $description isa String
         Interfaces.description(::Type{<:$interface}) = $description
         # Generate a docstring for the interface
         let description=$description,

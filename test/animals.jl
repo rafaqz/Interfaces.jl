@@ -24,7 +24,7 @@ function walk end
 function talk end
 function dig end
 
-@interface AnimalInterface (
+components = (
     mandatory = (
         age = (
              "all animals have a `Real` age" => x -> age(x) isa Real,
@@ -36,9 +36,13 @@ function dig end
         talk = "this animal can talk" => x -> talk(x) isa Symbol,
         dig = "this animal can dig" => x -> dig(x) isa String,
     )
-) """
+)
+
+description = """
 Defines a generic interface for animals to do the things they do best.
 """
+
+@interface AnimalInterface components description
 
 end;
 
