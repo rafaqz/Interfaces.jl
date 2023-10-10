@@ -5,5 +5,6 @@
 /Manifest.toml
 /docs/build/
 /docs/src/index.md
-/docs/src/animals.md
+/docs/src/basic.md
+/docs/src/advanced.md
 /docs/Manifest.toml

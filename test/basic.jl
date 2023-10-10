@@ -27,8 +27,8 @@ function dig end
 components = (
     mandatory = (
         age = (
-             "all animals have a `Real` age" => x -> age(x) isa Real,
-             "all animals have an age larger than zero" => x -> age(x) >= 0,
+            "all animals have a `Real` age" => x -> age(x) isa Real,
+            "all animals have an age larger than zero" => x -> age(x) >= 0,
         ),
     ),
     optional = (
@@ -64,6 +64,10 @@ Animals.talk(::Duck) = :quack
 
 ducks = [Duck(1), Duck(2)]
 Interfaces.test(Animals.AnimalInterface, Duck, ducks)
+
+# As well as two optional methods
+
+Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
 
 #=
 Finally we declare it, so that the information can be used in static dispatch.

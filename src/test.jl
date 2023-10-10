@@ -8,6 +8,23 @@ Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
 Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
 Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
 
+function check_coherent_types(O::Type, obj)
+    if obj isa Arguments
+        coherent_types = any(T -> T <: O, fieldtypes(typeof(nt(obj))))
+    else
+        coherent_types = obj isa O
+    end
+    if !coherent_types
+        throw(ArgumentError("""Each tested object must either be an instance of `$O` or an instance of `Arguments` whose field types include at least one subtype of `$O`. You provided a `$(typeof(obj))` instead. """))
+    end
+end
+
+function check_coherent_types(O::Type, tow::TestObjectWrapper)
+    for obj in tow
+        check_coherent_types(O::Type, obj)
+    end
+end
+
 """
     test(::Type{<:Interface}, obj)
 
@@ -35,6 +52,7 @@ test(T::Type{<:Interface}, obj; kw...) = test(T, typeof(obj), (obj,); kw...)
 function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     show=true, keys=nothing
 )
+    check_coherent_types(O, objs)
     if show
         print("Testing ")
         printstyled(_get_type(T).name.name; color=:blue)
