@@ -79,12 +79,11 @@ int_pairs = [Arguments(x = 2, y = 1)]
 Interfaces.test(Group.GroupInterface, Int, int_pairs)
 
 #=
-What happens if we give an input whose first field type (`Int`) is not the one we are testing (`Float64`)?
+What happens if we give an input whose field types (`Int`) are not coherent with the type we are testing (`Float64`)?
 =#
 
-bad_pairs = [Arguments(x = 2, y = 1.0)]
 try
-    Interfaces.test(Group.GroupInterface, Float64, bad_pairs)
+    Interfaces.test(Group.GroupInterface, Float64, int_pairs)
 catch e
     print(e.msg)
 end
@@ -93,7 +92,7 @@ end
 In summary, there are two things to remember:
 
 1. The anonymous functions in the interface conditions of `Interfaces.@interface` should accept a single object of type `Arguments` and then work with its named fields. These fields should be listed in the docstring.
-2. The list of objects passed to `Interface.test` must all be of type `Arguments`, with the right named fields. Their first field type must correspond to the type you are testing.
+2. The list of objects passed to `Interface.test` must all be of type `Arguments`, with the right named fields. At least one field must have the type you are testing.
 =#
 
 # The following tests are not part of the docs  #src
@@ -102,4 +101,4 @@ using Test  #src
 
 @test Interfaces.test(Group.GroupInterface, Float64, float_pairs)  #src
 @test !Interfaces.test(Group.GroupInterface, Int, int_pairs)  #src
-@test_throws ArgumentError Interfaces.test(Group.GroupInterface, Float64, bad_pairs)  #src
+@test_throws ArgumentError Interfaces.test(Group.GroupInterface, Float64, int_pairs)  #src

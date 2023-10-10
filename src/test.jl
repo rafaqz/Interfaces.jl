@@ -9,14 +9,13 @@ Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
 Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
 
 function check_coherent_types(O::Type, obj)
-    T = typeof(obj)
     if obj isa Arguments
-        F = first_field_type(T)
+        coherent_types = any(T -> T <: O, fieldtypes(typeof(nt(obj))))
     else
-        F = T
+        coherent_types = obj isa O
     end
-    if !(F <: O)
-        throw(ArgumentError("""Each tested object must either be an instance of `$O` or an instance of `Arguments` whose first field type is `$O`. You provided a `$T` instead. """))
+    if !coherent_types
+        throw(ArgumentError("""Each tested object must either be an instance of `$O` or an instance of `Arguments` whose field types include at least one subtype of `$O`. You provided a `$(typeof(obj))` instead. """))
     end
 end
 
