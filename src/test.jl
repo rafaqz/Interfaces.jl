@@ -126,9 +126,21 @@ _showresult(key, res) = show(res)
 function _showresult(key, pair::Pair)
     desc, res = pair
     print(desc, ": ")
-    printstyled(res; color=(res ? :green : :red))
+    _showresult(key, res)
 end
 _showresult(key, res::Bool) = printstyled(res; color=(res ? :green : :red))
+function _showresult(key, res::AbstractArray)
+    print("[") 
+    _showresult(key, first(res))
+    for r in res[2:end]
+        print(", ") 
+        _showresult(key, r) 
+    end
+    print("]") 
+end
+function _showresult(key, res::AbstractArray{<:Pair})
+    _showresult(key, first(first(res)) => last.(res))
+end
 function _showresult(key, res::NTuple{<:Any,Bool})
     _showresult(key, first(res))
     map(r -> (print(", "); _showresult(key, r)), Base.tail(res))
