@@ -99,7 +99,8 @@ function _test(name::Symbol, condition, objs::TestObjectWrapper, i=nothing)
 end
 function _test(name::Symbol, condition, obj, i=nothing)
     try
-        res = condition isa Pair ? condition[2](obj) : condition(obj)
+        obj_copy = deepcopy(obj)
+        res = condition isa Pair ? condition[2](obj_copy) : condition(obj_copy)
         # Allow returning a function or tuple of functions that are tested again
         if res isa Union{Pair,Tuple,Base.Callable}
             return _test(name, res, obj, i)
