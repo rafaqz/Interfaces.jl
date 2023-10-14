@@ -31,7 +31,7 @@ function test_iterate(x)
 end
 
 # :size demonstrates an interface condition that instead of return a Bool,
-function test_size(x)
+function test_iterator_size(x)
     sizetrait = Base.IteratorSize(typeof(x))
     if sizetrait isa Base.HasLength
         length(x) isa Integer
@@ -49,9 +49,10 @@ function test_size(x)
     end
 end
 
-function test_eltype(x)
+function test_iterator_eltype(x)
     eltypetrait = Base.IteratorEltype(x) 
     if eltypetrait isa Base.HasEltype 
+        x1, _ = iterate(x) 
         typeof(first(x)) <: eltype(x) 
     elseif eltypetrait isa Base.EltypeUnknown 
         true
@@ -60,11 +61,6 @@ function test_eltype(x)
     end
 end
 
-#=
-:indexing returns three condition functions.
-We force the implementation of `firstindex` and `lastindex`
-Or it is hard to test `getindex` generically
-=#
 function test_indexing(x)
     firstindex(x) isa Integer &&
     lastindex(x) isa Integer &&
@@ -79,8 +75,8 @@ test_reverse(x) = collect(Iterators.reverse(x)) == reverse(collect(x))
     # that implement the interface.
     mandatory = (
         iterate = test_iterate,
-        size = test_size,
-        eltype = test_eltype,
+        size = test_iterator_size,
+        eltype = test_iterator_eltype,
     ),
     # Optional conditions. These should be specified in the
     # interface type if an object implements them: IterationInterface{(:reverse,:indexing)}
@@ -88,4 +84,4 @@ test_reverse(x) = collect(Iterators.reverse(x)) == reverse(collect(x))
         reverse = test_reverse,
         indexing = test_indexing,
     )
-)
+) "An interface for Base Julia iteration"
