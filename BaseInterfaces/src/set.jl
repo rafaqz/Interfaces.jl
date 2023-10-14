@@ -6,7 +6,7 @@ mandatory = (
     type = s -> s isa AbstractSet,
     eltype = "elements eltype of set `s` are subtypes of `eltype(s)`" => s -> typeof(first(iterate(s))) <: eltype(s),
     length = "set defines length and test object has length larger than zero" => s -> length(s) isa Int && length(s) > 0,
-    iteration = "follows the IterationInterface" => x -> Interfaces.test(IterationInterface, x),
+    iteration = "follows the IterationInterface" => x -> Interfaces.test(IterationInterface, x; show=false),
     copy = s -> begin
         s1 = copy(s) 
         s1 !== s && s1 isa typeof(s) && collect(s) == collect(s1)

@@ -1,6 +1,6 @@
 @interface ArrayInterface (
     mandatory = (
-        iterate = A -> Interfaces.test(IterationInterface, A),
+        iterate = A -> Interfaces.test(IterationInterface, A; show=false),
         ndims = A -> ndims(A) isa Int,
         size = (
             A -> size(A) isa NTuple{<:Any,Int},

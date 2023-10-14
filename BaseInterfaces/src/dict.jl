@@ -2,7 +2,7 @@
 @interface DictInterface (
     mandatory = (;
         type = a -> a.d isa AbstractDict,
-        iterate = a -> Interfaces.test(IterationInterface, a.d) && first(iterate(a.d)) isa Pair,
+        iterate = a -> Interfaces.test(IterationInterface, a.d; show=false) && first(iterate(a.d)) isa Pair,
         eltype = a -> eltype(a.d) <: Pair,
         getindex = a -> a.d[first(keys(a.d))] === last(first(iterate(a.d))),
     ),
