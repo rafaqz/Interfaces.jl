@@ -25,4 +25,5 @@ end
 
 @testset "SetInterface" begin
     @test Interfaces.test(SetInterface, Set, [Set((1, 2))])
+    @test Interfaces.test(SetInterface, BitSet, [BitSet((1, 2))])
 end

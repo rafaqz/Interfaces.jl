@@ -3,6 +3,7 @@
 # Requirements for AbstractSet subtypes:
 
 mandatory = (
+    type = s -> s isa AbstractSet,
     eltype = "elements eltype of set `s` are subtypes of `eltype(s)`" => s -> typeof(first(iterate(s))) <: eltype(s),
     length = "set defines length and test object has length larger than zero" => s -> length(s) isa Int && length(s) > 0,
     iteration = "follows the IterationInterface" => x -> Interfaces.test(IterationInterface, x),
