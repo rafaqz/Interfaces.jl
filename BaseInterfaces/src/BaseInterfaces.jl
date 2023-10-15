@@ -28,7 +28,7 @@ include("array.jl")
 @implements DictInterface{(:setindex,)} WeakKeyDict
 @implements DictInterface Base.EnvDict
 @implements DictInterface Base.ImmutableDict
-@implements DictInterface Base.Pairs
+# @implements DictInterface Base.Pairs - not on 1.6?
 
 @implements IterationInterface{(:reverse,:indexing,)} UnitRange
 @implements IterationInterface{(:reverse,:indexing,)} StepRange

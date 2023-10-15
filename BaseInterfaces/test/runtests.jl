@@ -28,7 +28,7 @@ end
     @test Interfaces.test(DictInterface, IdDict, [Arguments(d=IdDict(:a => 1, :b => 2), k=:c, v=3)])
     @test Interfaces.test(DictInterface, Base.EnvDict, [Arguments(d=Base.EnvDict())])
     @test Interfaces.test(DictInterface, Base.ImmutableDict, [Arguments(d=Base.ImmutableDict(:a => 1, :b => 2))])
-    @test Interfaces.test(DictInterface, Base.Pairs, [Arguments(d=Base.pairs((a = 1, b = 2)))])
+    # @test Interfaces.test(DictInterface, Base.Pairs, [Arguments(d=Base.pairs((a = 1, b = 2)))])
     @test Interfaces.test(DictInterface, Test.GenericDict, [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)])
     a = Ref(1); b = Ref(2)
     @test Interfaces.test(DictInterface, WeakKeyDict, [Arguments(d= d = WeakKeyDict(a => 1, b => 2), k=Ref(3), v=3)])
