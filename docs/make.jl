@@ -48,6 +48,7 @@ makedocs(;
         "Home" => "index.md",
         "Examples" => ["Basic" => "basic.md", "Advanced" => "advanced.md"],
         "API reference" => "api.md",
+        "BaseInterfaces.jl reference" => "baseinterfaces.md",
     ],
 )
 
