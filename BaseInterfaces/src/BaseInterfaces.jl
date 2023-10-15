@@ -14,8 +14,6 @@ include("array.jl")
 # @implements ArrayInterface Base.LogicalIndex # No getindex
 @implements ArrayInterface UnitRange
 @implements ArrayInterface StepRange
-@implements ArrayInterface LinRange
-@implements ArrayInterface Base.OneTo
 @implements ArrayInterface Base.Slice
 @implements ArrayInterface Base.IdentityUnitRange
 @implements ArrayInterface Base.CodeUnits
@@ -35,8 +33,8 @@ include("array.jl")
 @implements IterationInterface{(:reverse,:indexing,)} UnitRange
 @implements IterationInterface{(:reverse,:indexing,)} StepRange
 @implements IterationInterface{(:reverse,:indexing,)} Array
-@implements IterationInterface{(:reverse,)} Base.Generator
 @implements IterationInterface{(:reverse,:indexing,)} Tuple
+@implements IterationInterface{(:reverse,)} Base.Generator
 
 # TODO add grouping to reduce the number of options
 @implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:empty!,:delete!,:push!,:copymutable,:sizehint)} Set

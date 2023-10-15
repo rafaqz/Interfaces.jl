@@ -1,5 +1,6 @@
 using Documenter
 using Interfaces
+using BaseInterfaces
 using Literate
 
 DocMeta.setdocmeta!(Interfaces, :DocTestSetup, :(using Interfaces); recursive=true)
@@ -34,7 +35,7 @@ Literate.markdown(
 )
 
 makedocs(;
-    modules=[Interfaces],
+    modules=[Interfaces, BaseInterfaces],
     authors="Rafael Schouten <rafaelschouten@gmail.com>",
     sitename="Interfaces.jl",
     format=Documenter.HTML(;
