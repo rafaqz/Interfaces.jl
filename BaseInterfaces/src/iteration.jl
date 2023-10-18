@@ -75,6 +75,7 @@ test_reverse(x) = collect(Iterators.reverse(x)) == reverse(collect(x))
     # that implement the interface.
     mandatory = (
         iterate = test_iterate,
+        isiterable = x -> Base.isiterable(typeof(x)),
         size = test_iterator_size,
         eltype = test_iterator_eltype,
     ),
