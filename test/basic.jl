@@ -82,19 +82,12 @@ The `@implements` macro takes two arguments.
 Intr.@implements Animals.AnimalInterface{(:walk,:talk)} Duck
 
 # Now let's see what happens when the interface is not correctly implemented.
-struct Chicken <: Animal end
+struct Chicken <: Animals.Animal end
 
 # As expected, the tests fail
 chickens = [Chicken()]
 try
     Interfaces.test(Animals.AnimalInterface, Chicken, chickens)
-catch e
-    print(e)
-end
-
-
-try
-    Interfaces.test(Animals.AnimalInterface, Int, [1, 2, 3])
 catch e
     print(e)
 end
