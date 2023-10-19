@@ -19,6 +19,8 @@ module Animals
 
 using Interfaces
 
+abstract type Animal end
+
 function age end
 function walk end
 function talk end
@@ -42,17 +44,17 @@ description = """
 Defines a generic interface for animals to do the things they do best.
 """
 
-@interface AnimalInterface components description
+@interface AnimalInterface Animal components description
 
 end;
 
 # ## Implementation
 
-using Interfaces
+import Interfaces as Intr
 
 # Now we implement the `AnimalInterface`, for a `Duck`.
 
-struct Duck
+struct Duck <: Animals.Animal
     age::Int
 end
 
@@ -63,11 +65,11 @@ Animals.talk(::Duck) = :quack
 # We then test that the interface is correctly implemented
 
 ducks = [Duck(1), Duck(2)]
-Interfaces.test(Animals.AnimalInterface, Duck, ducks)
+Intr.test(Animals.AnimalInterface, Duck, ducks)
 
 # As well as two optional methods
 
-Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
+Intr.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
 
 #=
 Finally we declare it, so that the information can be used in static dispatch.
@@ -77,10 +79,10 @@ The `@implements` macro takes two arguments.
 2. The type for which the interface is implemented.
 =#
 
-@implements Animals.AnimalInterface{(:walk,:talk)} Duck
+Intr.@implements Animals.AnimalInterface{(:walk,:talk)} Duck
 
 # Now let's see what happens when the interface is not correctly implemented.
-struct Chicken end
+struct Chicken <: Animal end
 
 # As expected, the tests fail
 chickens = [Chicken()]
@@ -89,6 +91,14 @@ try
 catch e
     print(e)
 end
+
+
+try
+    Interfaces.test(Animals.AnimalInterface, Int, [1, 2, 3])
+catch e
+    print(e)
+end
+
 
 # The following tests are not included in the docs  #src
 

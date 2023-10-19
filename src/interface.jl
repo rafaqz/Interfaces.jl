@@ -36,9 +36,16 @@ Returns the components of the interface, as a `NamedTuple` of `NamedTuple`.
 function components end
 
 """
+    requiredtype(::Type{<:Interface})
+
+Returns the supertype required for all interface implementations.
+"""
+function requiredtype end
+
+"""
 @interface(interfacename, components, [description])
 
-Define an interface.
+Define an interface that can apply to types `<: Any`.
 
 ```julia
 components = (
@@ -50,17 +57,19 @@ components = (
 )
 description = "A description of the interface"
 
-@interface MyInterface components description
+@interface MyInterface Any components description
 ```
 """
-macro interface(interface::Symbol, components, description)
+macro interface(interface::Symbol, type, components, description)
     quote
+        @assert $type isa Type
+        @assert $components isa NamedTuple{(:mandatory,:optional)}
+        @assert $description isa String
         # Define the interface type (should it be concrete?)
         abstract type $interface{Components} <: $Interfaces.Interface{Components} end
         # Define the interface component methods
-        @assert $components isa NamedTuple{(:mandatory,:optional)}
+        $Interfaces.requiredtype(::Type{<:$interface}) = $type
         $Interfaces.components(::Type{<:$interface}) = $components
-        @assert $description isa String
         $Interfaces.description(::Type{<:$interface}) = $description
         # Generate a docstring for the interface
         let description=$description,
