@@ -56,17 +56,17 @@ description = "A description of the interface"
 macro interface(interface::Symbol, components, description)
     quote
         # Define the interface type (should it be concrete?)
-        abstract type $interface{Components} <: Interfaces.Interface{Components} end
+        abstract type $interface{Components} <: $Interfaces.Interface{Components} end
         # Define the interface component methods
         @assert $components isa NamedTuple{(:mandatory,:optional)}
-        Interfaces.components(::Type{<:$interface}) = $components
+        $Interfaces.components(::Type{<:$interface}) = $components
         @assert $description isa String
-        Interfaces.description(::Type{<:$interface}) = $description
+        $Interfaces.description(::Type{<:$interface}) = $description
         # Generate a docstring for the interface
         let description=$description,
             interfacesym=$(QuoteNode(interface)),
-            m_keys=Interfaces.mandatory_keys($interface),
-            o_keys=Interfaces.optional_keys($interface)
+            m_keys=$Interfaces.mandatory_keys($interface),
+            o_keys=$Interfaces.optional_keys($interface)
             @doc """
                 $("   ") $interfacesym
 
