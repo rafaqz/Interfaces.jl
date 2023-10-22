@@ -57,11 +57,11 @@ function _implements_inner(interface, objtype; show=false)
     end
     quote
         # Define a `implements` trait stating that `objtype` implements `interface`
-        Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
-        Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
-            Interfaces._all_in(Options, Interfaces.optional_keys(T, O))
+        $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
+        $Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
+            $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
         # Define which optional components the object implements
-        Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
+        $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
         nothing
     end |> esc
 end
