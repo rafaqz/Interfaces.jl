@@ -29,7 +29,7 @@ function neutral end
 function multiplication end
 function inversion end
 
-@interface GroupInterface (
+@interface GroupInterface Number (
     mandatory = (;
         neutral_check = (
             "neutral stable" => a::Arguments -> neutral(typeof(a.x)) isa typeof(a.x),

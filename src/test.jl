@@ -52,6 +52,8 @@ test(T::Type{<:Interface}, obj; kw...) = test(T, typeof(obj), (obj,); kw...)
 function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     show=true, keys=nothing
 )
+
+    O <: requiredtype(T) || throw(ArgumentError("$O is not a subtype of $(requiredtype(T))"))  
     check_coherent_types(O, objs)
     if show
         print("Testing ")

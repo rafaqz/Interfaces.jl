@@ -19,6 +19,8 @@ module Animals
 
 using Interfaces
 
+abstract type Animal end
+
 function age end
 function walk end
 function talk end
@@ -42,7 +44,7 @@ description = """
 Defines a generic interface for animals to do the things they do best.
 """
 
-@interface AnimalInterface components description
+@interface AnimalInterface Animal components description
 
 end;
 
@@ -52,7 +54,7 @@ using Interfaces
 
 # Now we implement the `AnimalInterface`, for a `Duck`.
 
-struct Duck
+struct Duck <: Animals.Animal
     age::Int
 end
 
@@ -80,7 +82,7 @@ The `@implements` macro takes two arguments.
 @implements Animals.AnimalInterface{(:walk,:talk)} Duck
 
 # Now let's see what happens when the interface is not correctly implemented.
-struct Chicken end
+struct Chicken <: Animals.Animal end
 
 # As expected, the tests fail
 chickens = [Chicken()]

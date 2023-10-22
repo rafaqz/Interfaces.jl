@@ -56,6 +56,10 @@ function _implements_inner(interface, objtype; show=false)
         optional_keys = ()
     end
     quote
+        # Chreck that the type matches
+        let objtype = $objtype, interface=$interface
+            objtype <: Interfaces.requiredtype(interface) || throw(ArgumentError("$objtype is not a subtype of $(Interfaces.requiredtype(interface))"))  
+        end
         # Define a `implements` trait stating that `objtype` implements `interface`
         $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
         $Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
