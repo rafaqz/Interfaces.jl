@@ -50,7 +50,7 @@ end;
 
 # ## Implementation
 
-import Interfaces as Intr
+using Interfaces
 
 # Now we implement the `AnimalInterface`, for a `Duck`.
 
@@ -65,11 +65,11 @@ Animals.talk(::Duck) = :quack
 # We then test that the interface is correctly implemented
 
 ducks = [Duck(1), Duck(2)]
-Intr.test(Animals.AnimalInterface, Duck, ducks)
+Interfaces.test(Animals.AnimalInterface, Duck, ducks)
 
 # As well as two optional methods
 
-Intr.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
+Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks)
 
 #=
 Finally we declare it, so that the information can be used in static dispatch.
@@ -79,7 +79,7 @@ The `@implements` macro takes two arguments.
 2. The type for which the interface is implemented.
 =#
 
-Intr.@implements Animals.AnimalInterface{(:walk,:talk)} Duck
+@implements Animals.AnimalInterface{(:walk,:talk)} Duck
 
 # Now let's see what happens when the interface is not correctly implemented.
 struct Chicken <: Animals.Animal end
@@ -91,7 +91,6 @@ try
 catch e
     print(e)
 end
-
 
 # The following tests are not included in the docs  #src
 
