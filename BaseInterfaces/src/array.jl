@@ -90,4 +90,4 @@ array_components = (;
 
 _wrappertype(A) = Base.typename(typeof(A)).wrapper
 
-@interface ArrayInterface array_components "Base Julia AbstractArray interface"
+@interface ArrayInterface AbstractArray array_components "Base Julia AbstractArray interface"

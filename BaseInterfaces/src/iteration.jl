@@ -70,7 +70,7 @@ end
 # `Iterators.reverse` gives reverse iteration 
 test_reverse(x) = collect(Iterators.reverse(x)) == reverse(collect(x))
 
-@interface IterationInterface (
+@interface IterationInterface Any (
     # Mandatory conditions: these must be met by all types
     # that implement the interface.
     mandatory = (
