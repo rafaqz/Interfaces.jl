@@ -23,19 +23,12 @@ HasEltype()	eltype(IterType)
 EltypeUnknown()	(none)
 =#
 
-function test_iterate(x)
-    !isnothing(iterate(x)) &&
-    !isnothing(iterate(iterate(x))) &&
-    iterate(x) isa Tuple &&
-    iterate(x, last(iterate(x))) isa Tuple
-end
-
 # :size demonstrates an interface condition that instead of return a Bool,
 function test_iterator_size(x)
     sizetrait = Base.IteratorSize(typeof(x))
     if sizetrait isa Base.HasLength
         length(x) isa Integer
-    elseif sizetrait isa Base.HasShape 
+    elseif sizetrait isa Base.HasShape
         length(x) isa Integer &&
         size(x) isa NTuple{<:Any,<:Integer} &&
         length(size(x)) == typeof(sizetrait).parameters[1] &&
@@ -50,39 +43,44 @@ function test_iterator_size(x)
 end
 
 function test_iterator_eltype(x)
-    eltypetrait = Base.IteratorEltype(x) 
-    if eltypetrait isa Base.HasEltype 
-        x1, _ = iterate(x) 
-        typeof(first(x)) <: eltype(x) 
-    elseif eltypetrait isa Base.EltypeUnknown 
+    eltypetrait = Base.IteratorEltype(x)
+    if eltypetrait isa Base.HasEltype
+        x1, _ = iterate(x)
+        typeof(first(x)) <: eltype(x)
+    elseif eltypetrait isa Base.EltypeUnknown
         true
     else
         error("IteratorEltype(x) returns $eltypetrait, allowed options are `HasEltype` or `EltypeUnknown`")
     end
 end
 
-function test_indexing(x)
-    firstindex(x) isa Integer &&
-    lastindex(x) isa Integer &&
-    getindex(x, firstindex(x)) == first(iterate(x))
-end
-
-# `Iterators.reverse` gives reverse iteration 
-test_reverse(x) = collect(Iterators.reverse(x)) == reverse(collect(x))
+# `Iterators.reverse` gives reverse iteration
 
 @interface IterationInterface Any (
     # Mandatory conditions: these must be met by all types
     # that implement the interface.
     mandatory = (
-        iterate = test_iterate,
+        iterate = (
+            x -> !isempty(x),
+            x -> !isnothing(iterate(x)),
+            x -> !isnothing(iterate(iterate(x))),
+            x -> iterate(x) isa Tuple,
+            x -> iterate(x, last(iterate(x))) isa Tuple,
+        ),
         isiterable = x -> Base.isiterable(typeof(x)),
         size = test_iterator_size,
         eltype = test_iterator_eltype,
+        in = x -> first(x) in x,
     ),
     # Optional conditions. These should be specified in the
     # interface type if an object implements them: IterationInterface{(:reverse,:indexing)}
     optional = (
-        reverse = test_reverse,
-        indexing = test_indexing,
+        reverse = x -> collect(Iterators.reverse(x)) == reverse(collect(x)),
+        # TODO: move this to collections?
+        indexing = (
+             x -> firstindex(x) isa Integer,
+             x -> lastindex(x) isa Integer,
+             x -> getindex(x, firstindex(x)) == first(iterate(x)),
+        ),
     )
 ) "An interface for Base Julia iteration"
