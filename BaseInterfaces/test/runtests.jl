@@ -28,10 +28,14 @@ end
     @test Interfaces.test(DictInterface, IdDict, [Arguments(d=IdDict(:a => 1, :b => 2), k=:c, v=3)])
     @test Interfaces.test(DictInterface, Base.EnvDict, [Arguments(d=Base.EnvDict())])
     @test Interfaces.test(DictInterface, Base.ImmutableDict, [Arguments(d=Base.ImmutableDict(:a => 1, :b => 2))])
-    # @test Interfaces.test(DictInterface, Base.Pairs, [Arguments(d=Base.pairs((a = 1, b = 2)))])
+    @static if VERSION >= v"1.9.0"
+        @test Interfaces.test(DictInterface, Base.Pairs, [Arguments(d=Base.pairs((a = 1, b = 2)))])
+    end
     @test Interfaces.test(DictInterface, Test.GenericDict, [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)])
-    a = Ref(1); b = Ref(2)
-    @test Interfaces.test(DictInterface, WeakKeyDict, [Arguments(d= d = WeakKeyDict(a => 1, b => 2), k=Ref(3), v=3)])
+    GC.enable(false) # Avoid segfaults from garbage collection of WeakKeyDict keys
+    a = Ref(1); b = Ref(2); k=Ref(3)
+    @test Interfaces.test(DictInterface, WeakKeyDict, [Arguments(d=WeakKeyDict(a => 1, b => 2), k, v=3)])
+    GC.enable(true)
 end
 
 @testset "IterationInterface" begin
@@ -47,5 +51,6 @@ end
     @test Interfaces.test(SetInterface, BitSet, [BitSet((1, 2))])
     @test Interfaces.test(SetInterface, Base.KeySet, [Base.KeySet(Dict(:a=>1, :b=>2))])
     @test Interfaces.test(SetInterface, Test.GenericSet, [Test.GenericSet(Set((1, 2)))])
-    # @test Interfaces.test(SetInterface, Base.IdSet, ?) 
+    s = Base.IdSet(); push!(s, "a"); push!(s, "b")
+    @test Interfaces.test(SetInterface, Base.IdSet, [s]) 
 end

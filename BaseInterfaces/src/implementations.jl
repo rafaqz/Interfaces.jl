@@ -17,7 +17,9 @@
 @implements DictInterface{:setindex!} WeakKeyDict
 @implements DictInterface Base.EnvDict
 @implements DictInterface Base.ImmutableDict
-# @implements DictInterface Base.Pairs - not on 1.6?
+@static if VERSION >= v"1.9.0"
+    @implements DictInterface Base.Pairs
+end
 
 @implements IterationInterface{(:reverse,:indexing)} UnitRange
 @implements IterationInterface{(:reverse,:indexing)} StepRange

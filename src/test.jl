@@ -84,7 +84,9 @@ function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
         optional_results = _test(T, optional, objs)
         if show
             _showresults(stdout, mandatory_results, "Mandatory components")
-            _showresults(stdout, optional_results, "Optional components")
+            if !isempty(optional_results)
+                _showresults(stdout, optional_results, "Optional components")
+            end
         end
         return all(_bool(mandatory_results)) && all(_bool(optional_results))
     else
@@ -146,7 +148,7 @@ end
 _showresult(io, key, res) = show(res)
 function _showresult(io, key, pair::Pair)
     desc, res = pair
-    print("\"", desc, "\" ")
+    print(desc, " ")
     _showresult(io, key, res)
 end
 _showresult(io, key, res::Bool) = printstyled(io, res; color=(res ? :green : :red))
