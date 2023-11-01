@@ -34,7 +34,7 @@ end
     @test Interfaces.test(DictInterface, Test.GenericDict, [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)])
     GC.enable(false) # Avoid segfaults from garbage collection of WeakKeyDict keys
     a = Ref(1); b = Ref(2); k=Ref(3)
-    @test Interfaces.test(DictInterface, WeakKeyDict, [Arguments(d=WeakKeyDict(a => 1, b => 2), k, v=3)])
+    @test Interfaces.test(DictInterface, WeakKeyDict, [Arguments(; d=WeakKeyDict(a => 1, b => 2), k, v=3)])
     GC.enable(true)
 end
 
