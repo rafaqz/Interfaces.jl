@@ -51,6 +51,10 @@ function _implements_inner(interface, objtype; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
         optional_keys = interface.args[2]
+        # Allow a single Symbol instead of a Tuple
+        if optional_keys isa QuoteNode
+            optional_keys = (optional_keys.value,)
+        end
     else
         interfacetype = interface
         optional_keys = ()

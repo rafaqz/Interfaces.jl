@@ -1,4 +1,5 @@
 #= Abstract Arrays
+https://docs.julialang.org/en/v1/manual/interfaces/
 
 Methods to implement		            Brief description
 size(A)		                            Returns a tuple containing the dimensions of A

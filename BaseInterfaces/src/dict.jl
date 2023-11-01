@@ -2,11 +2,9 @@
 @interface DictInterface AbstractDict ( # <: CollectionInterface
     mandatory = (;
         iterate = a -> Interfaces.test(IterationInterface, a.d; show=false) && first(iterate(a.d)) isa Pair,
-        # keytype = (
-            # a -> keytype(typeof(a.d)) isa Type,
-            # a -> keytype(typeof(a.d)) isa typeof(eltype(a.d)),
-        # ),
         eltype = a -> eltype(a.d) <: Pair,
+        keytype = a -> keytype(a.d) == eltype(a.d).parameters[1],
+        valtype = a -> valtype(a.d) == eltype(a.d).parameters[2],
         getindex = a -> a.d[first(keys(a.d))] === last(first(iterate(a.d))),
         keys = a -> all(k -> k isa keytype(a.d), keys(a.d)),
         values = a -> all(v -> v isa valtype(a.d), values(a.d)),

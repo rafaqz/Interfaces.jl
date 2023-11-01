@@ -25,7 +25,7 @@ Interfaces.tests(DictInterface, MyDict, [mydict1, mydict2, ...])
 Declaring that it follows the interface is done with:
 
 ```julia
-@implements DictInterface{(:optional, :components)} MyDict
+@implements DictInterface{(:component1, :component2)} MyDict
 ```
 
 Where components can be chosen from `Interfaces.optional_keys(DictInterface)`.

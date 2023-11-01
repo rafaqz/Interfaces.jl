@@ -2,7 +2,7 @@ using BaseInterfaces
 using Interfaces
 using Test
 
-@implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint)} Test.GenericSet
+@implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Test.GenericSet
 @implements DictInterface Test.GenericDict
 
 @testset "ArrayInterface" begin

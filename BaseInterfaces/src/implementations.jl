@@ -36,6 +36,6 @@
 @implements IterationInterface WeakKeyDict
 
 # TODO add grouping to reduce the number of options
-@implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:empty!,:delete!,:push!,:copymutable,:sizehint)} Set
-@implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:empty!,:delete!,:push!,:copymutable,:sizehint)} BitSet
-@implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint)} Base.KeySet
+@implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:union,:empty!,:delete!,:push!,:copymutable,:sizehint!)} Set
+@implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:union,:empty!,:delete!,:push!,:copymutable,:sizehint!)} BitSet
+@implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Base.KeySet
