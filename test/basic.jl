@@ -102,10 +102,10 @@ using Test  #src
     @test Interfaces.test(Animals.AnimalInterface, Duck, ducks) == true  #src
     @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks) == true  #src
     # TODO wrap errors somehow, or just let Invariants.jl handle that.  #src
-    @test_throws MethodError Interfaces.test(Animals.AnimalInterface{:dig}, Duck, ducks)  #src
+    @test_throws Interfaces.InterfaceError Interfaces.test(Animals.AnimalInterface{:dig}, Duck, ducks)  #src
 end  #src
 
 @testset "Chicken" begin  #src
     @test Interfaces.implements(Animals.AnimalInterface{(:walk,:talk)}, Chicken()) == false  #src
-    @test_throws MethodError Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Chicken())  #src
+    @test_throws Interfaces.InterfaceError Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Chicken())  #src
 end  #src

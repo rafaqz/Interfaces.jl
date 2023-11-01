@@ -4,6 +4,22 @@ struct TestObjectWrapper{O}
     objects::O
 end
 
+struct InterfaceError <: Exception 
+    t::Type
+    name::Symbol
+    num::Union{Nothing,Int}
+    desc::String
+    obj::Any
+    e::Exception
+end
+
+function Base.showerror(io::IO, ie::InterfaceError)
+    printstyled("InterfaceError: "; color=:red)
+    numstring = isnothing(ie.num) ? "" : " $(ie.num)"
+    println("test for $(ie.t) :$(ie.name)$(ie.numstring)$(ie.desc) threw a $(typeof(ie.e)) \n For test object $(ie.obj):\n")
+    Base.showerror(io, e)
+end
+
 Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
 Base.length(tow::TestObjectWrapper, args...) = length(tow.objects)
 Base.getindex(tow::TestObjectWrapper, i::Int) = getindex(tow.objects, i)
@@ -56,101 +72,109 @@ function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     O <: requiredtype(T) || throw(ArgumentError("$O is not a subtype of $(requiredtype(T))"))  
     check_coherent_types(O, objs)
     if show
-        print("Testing ")
+        print("\nTesting ")
         printstyled(_get_type(T).name.name; color=:blue)
         print(" is implemented for ")
         printstyled(O, "\n"; color=:blue)
     end
     if isnothing(keys)
         optional = NamedTuple{optional_keys(T, O)}(components(T).optional)
-        mandatory_results = _test(components(T).mandatory, objs)
-        optional_results = _test(optional, objs)
+        mandatory_results = _test(T, components(T).mandatory, objs)
+        optional_results = _test(T, optional, objs)
         if show
-            _showresults(mandatory_results, "Mandatory components")
-            _showresults(optional_results, "Optional components")
+            _showresults(stdout, mandatory_results, "Mandatory components")
+            if !isempty(optional_results)
+                _showresults(stdout, optional_results, "Optional components")
+            end
         end
         return all(_bool(mandatory_results)) && all(_bool(optional_results))
     else
         allcomponents = merge(components(T)...)
         optional = NamedTuple{_as_tuple(keys)}(allcomponents)
-        results = _test(optional, objs)
-        show && _showresults(results, "Specified components")
+        results = _test(T, optional, objs)
+        show && _showresults(stdout, results, "Specified components")
         return all(_bool(results))
     end
 end
 
-function _test(tests::NamedTuple{K}, objs::TestObjectWrapper) where K
+function _test(T, tests::NamedTuple{K}, objs::TestObjectWrapper) where K
     map(keys(tests), values(tests)) do k, v
-        _test(k, v, objs)
+        _test(T, k, v, objs)
     end |> NamedTuple{K}
 end
-function _test(name::Symbol, condition::Tuple, objs, i=nothing)
+function _test(T, name::Symbol, condition::Tuple, objs, i=nothing)
     map(condition, ntuple(identity, length(condition))) do c, i
-        _test(name, c, objs, i)
+        _test(T, name, c, objs, i)
     end
 end
-function _test(name::Symbol, condition::Tuple, objs::TestObjectWrapper, i=nothing)
+function _test(T, name::Symbol, condition::Tuple, objs::TestObjectWrapper, i=nothing)
     map(condition, ntuple(identity, length(condition))) do c, i
-        _test(name, c, objs, i)
+        _test(T, name, c, objs, i)
     end
 end
-function _test(name::Symbol, condition, objs::TestObjectWrapper, i=nothing)
-    map(o -> _test(name, condition, o, i), objs.objects)
+function _test(T, name::Symbol, condition, objs::TestObjectWrapper, i=nothing)
+    map(o -> _test(T, name, condition, o, i), objs.objects)
 end
-function _test(name::Symbol, condition, obj, i=nothing)
-    try
-        res = condition isa Pair ? condition[2](obj) : condition(obj)
+function _test(T, name::Symbol, condition, obj, i=nothing)
+    obj_copy = deepcopy(obj)
+    res = try
+        f = condition isa Pair ? condition[2] : condition
+        f(obj_copy)
         # Allow returning a function or tuple of functions that are tested again
-        if res isa Union{Pair,Tuple,Base.Callable}
-            return _test(name, res, obj, i)
-        else
-            return condition isa Pair ? condition[1] => res : res
-        end
     catch e
-        num = isnothing(i) ? "" : ", condition $i"
         desc = condition isa Pair ? string(" \"", condition[1], "\"") : ""
-        @warn "interface test :$name$num$desc failed for test object $obj"
-        rethrow(e)
+        rethrow(InterfaceError(T, name, i, desc, obj, e))
+    end
+
+    if res isa Union{Pair,Tuple,Base.Callable}
+        return _test(T, name, res, obj, i)
+    else
+        return condition isa Pair ? condition[1] => res : res
     end
 end
 
-function _showresults(results::NamedTuple, title::String)
+function _showresults(io::IO, results::NamedTuple, title::String)
     printstyled(title; color=:light_black)
     println()
     foreach(keys(results), results) do k, res
-        print("$k : ")
-        _showresult(k, res)
+        printstyled("$k"; color=:magenta)
+        print(": ")
+        _showresult(io, k, res)
         println()
     end
 end
 
-_showresult(key, res) = show(res)
-function _showresult(key, pair::Pair)
+_showresult(io, key, res) = show(res)
+function _showresult(io, key, pair::Pair)
     desc, res = pair
-    print(desc, ": ")
-    _showresult(key, res)
+    print(desc, " ")
+    _showresult(io, key, res)
 end
-_showresult(key, res::Bool) = printstyled(res; color=(res ? :green : :red))
-function _showresult(key, res::AbstractArray)
-    print("[") 
-    _showresult(key, first(res))
+_showresult(io, key, res::Bool) = printstyled(io, res; color=(res ? :green : :red))
+function _showresult(io, key, res::AbstractArray)
+    print(io, "[") 
+    _showresult(io, key, first(res))
     for r in res[2:end]
-        print(", ") 
-        _showresult(key, r) 
+        print(io, ", ") 
+        _showresult(io, key, r) 
     end
-    print("]") 
+    print(io, "]") 
 end
-function _showresult(key, res::AbstractArray{<:Pair})
-    _showresult(key, first(first(res)) => last.(res))
+function _showresult(io, key, res::AbstractArray{<:Pair})
+    _showresult(io, key, first(first(res)) => last.(res))
 end
-function _showresult(key, res::NTuple{<:Any,Bool})
-    _showresult(key, first(res))
-    map(r -> (print(", "); _showresult(key, r)), Base.tail(res))
+function _showresult(io, key, res::NTuple{<:Any,Bool})
+    print(io, "(") 
+    _showresult(io, key, first(res))
+    map(r -> (print(io, ", "); _showresult(io, key, r)), Base.tail(res))
+    print(io, ")") 
 end
-function _showresult(key, res::NTuple{<:Any})
-    _showresult(key, first(res))
+function _showresult(io, key, res::NTuple{<:Any})
+    print(io, "(") 
+    _showresult(io, key, first(res))
     spacer = join([' ' for i in 1:length(string(key)) + 3])
-    map(r -> (print(",\n$spacer"); _showresult(key, r)), Base.tail(res))
+    map(r -> (print(io, ",\n$spacer"); _showresult(io, key, r)), Base.tail(res))
+    print(io, ")") 
 end
 
 _bool(xs::Union{Tuple,NamedTuple,AbstractArray}) = all(map(_bool, xs))

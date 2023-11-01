@@ -1,4 +1,4 @@
-# # Basic
+# # Advanced
 
 #=
 Here's an example of multi-argument interface using groups.

@@ -2,15 +2,13 @@ module BaseInterfaces
 
 using Interfaces
 
-export IterationInterface
+export ArrayInterface, DictInterface, IterationInterface, SetInterface
 
 include("iteration.jl")
+include("dict.jl")
+include("set.jl")
+include("array.jl")
 
-# Some example interface delarations.
-@implements IterationInterface{(:reverse,:indexing,)} UnitRange
-@implements IterationInterface{(:reverse,:indexing,)} StepRange
-@implements IterationInterface{(:reverse,:indexing,)} Array
-@implements IterationInterface{(:reverse,)} Base.Generator
-@implements IterationInterface{(:reverse,:indexing,)} Tuple
+include("implementations.jl")
 
 end
