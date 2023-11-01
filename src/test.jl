@@ -14,10 +14,9 @@ struct InterfaceError <: Exception
 end
 
 function Base.showerror(io::IO, ie::InterfaceError)
-    (; t, name, num, desc, obj, e) = ie
     printstyled("InterfaceError: "; color=:red)
-    numstring = isnothing(num) ? "" : " $num"
-    println("test for $t :$name$numstring$desc threw a $(typeof(e)) \n For test object $obj:\n")
+    numstring = isnothing(ie.num) ? "" : " $(ie.num)"
+    println("test for $(ie.t) :$(ie.name)$(ie.numstring)$(ie.desc) threw a $(typeof(ie.e)) \n For test object $(ie.obj):\n")
     Base.showerror(io, e)
 end
 
