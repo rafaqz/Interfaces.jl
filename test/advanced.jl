@@ -67,7 +67,7 @@ Interfaces.test(Group.GroupInterface, Float64, float_pairs)
 
 # We can thus declare proudly
 
-@implements Group.GroupInterface Float64
+@implements Group.GroupInterface Float64 [Arguments(x = 2.0, y = 1.0)]
 
 #=
 Now we check it for integer numbers.
@@ -99,6 +99,6 @@ In summary, there are two things to remember:
 
 using Test  #src
 
-@test Interfaces.test(Group.GroupInterface, Float64, float_pairs)  #src
-@test !Interfaces.test(Group.GroupInterface, Int, int_pairs)  #src
+@test Interfaces.test(Group.GroupInterface, Float64)  #src
+@test !Interfaces.test(Group.GroupInterface, int_pairs)  #src
 @test_throws ArgumentError Interfaces.test(Group.GroupInterface, Float64, int_pairs)  #src

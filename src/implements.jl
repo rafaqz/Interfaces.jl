@@ -40,14 +40,14 @@ using BaseInterfaces
 @implements BaseInterfaces.IterationInterface{(:indexing,:reverse)} MyObject
 ```
 """
-macro implements(interface, objtype)
-    _implements_inner(interface, objtype)
+macro implements(interface, objtype, test_objects)
+    _implements_inner(interface, objtype, test_objects)
 end
-macro implements(dev::Symbol, interface, objtype)
+macro implements(dev::Symbol, interface, objtype, test_objects)
     dev == :dev || error("3 arg version of `@implements must start with `dev`, and should only be used in testing")
-    _implements_inner(interface, objtype; show=true)
+    _implements_inner(interface, objtype, test_objects; show=true)
 end
-function _implements_inner(interface, objtype; show=false)
+function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
         optional_keys = interface.args[2]
@@ -70,6 +70,7 @@ function _implements_inner(interface, objtype; show=false)
             $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
         # Define which optional components the object implements
         $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
+        $Interfaces.test_objects(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $test_objects
         nothing
     end |> esc
 end

@@ -9,7 +9,7 @@ Components is an `Tuple` of `Symbol`.
 abstract type Interface{Components} end
 
 """
-    optional_keys(T::Type{<:Interface}, obj::Type)
+    optional_keys(T::Type{<:Interface}, O::Type)
 
 Get the keys for the optional components of an [`Interface`](@ref),
 as a tuple os `Symbol`.
@@ -20,6 +20,13 @@ optional_keys(T::Type{<:Interface}, obj::Type) = ()
 optional_keys(T::Type{<:Interface}) = keys(components(T).optional)
 
 mandatory_keys(T::Type{<:Interface}, args...) = keys(components(T).mandatory)
+
+"""
+    test_objects(T::Type{<:Interface}, O::Type)
+
+Get the test object(s) for type `O` and interface `T`.
+"""
+function test_objects end
 
 """
     description(::Type{<:Interface})

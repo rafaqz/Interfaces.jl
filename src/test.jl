@@ -41,7 +41,8 @@ function check_coherent_types(O::Type, tow::TestObjectWrapper)
 end
 
 """
-    test(::Type{<:Interface}, obj)
+    test(::Type{<:Interface}, module::Module)
+    test(::Type{<:Interface}, obj::Type)
 
 Test if an interface is implemented correctly for an object,
 returning `true` or `false`.
@@ -49,7 +50,37 @@ returning `true` or `false`.
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Keys
+function test(T::Type, mod::Module; kw...) 
+    methodlist = methods(implements, Tuple{T,<:Any})
+    _test_module(mod, methodlist; kw...)
+end
+function test(mod::Module; kw...) 
+    methodlist = methods(implements, Tuple{<:Any,<:Any})
+    _test_module(mod, methodlist; kw...)
+end
+
+
+function _test_module(mod, methodlist; kw...)
+    all(methodlist) do m
+        m.module == mod || return true
+        b = m.sig isa UnionAll ? m.sig.body : m.sig
+        # We make this signature in the @interface macro
+        # so we know it is this consistent
+
+        t = b.parameters[2].var.ub
+        if t isa UnionAll
+            T = t.body.name.wrapper
+        else
+            T = t.name.wrapper
+        end
+        O = b.parameters[3].var.ub
+        @show T O typeof(T) typeof(O)
+
+        return test(T, O; kw...)
+    end
+end
+
+function test(T::Type{<:Interface{Keys}}, O::Type, test_objects=test_objects(T, O); kw...) where Keys
     # Allow passing the keys in the abstract type
     # But get them out and put them in the `keys` keyword
     T1 = _get_type(T).name.wrapper
@@ -57,7 +88,7 @@ function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Ke
     # And run the tests on the parameterless type
     return _test(T1, O, objs; keys=Keys, kw...)
 end
-function test(T::Type{<:Interface}, O::Type, test_objects; kw...)
+function test(T::Type{<:Interface}, O::Type, test_objects=test_objects(T, O); kw...)
     objs = TestObjectWrapper(test_objects)
     return _test(T, O, objs; kw...)
 end
@@ -118,7 +149,9 @@ function _test(T, name::Symbol, condition, obj, i=nothing)
     obj_copy = deepcopy(obj)
     res = try
         f = condition isa Pair ? condition[2] : condition
+        # GC.enable(false)
         f(obj_copy)
+        # GC.enable(true)
         # Allow returning a function or tuple of functions that are tested again
     catch e
         desc = condition isa Pair ? string(" \"", condition[1], "\"") : ""

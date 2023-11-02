@@ -79,15 +79,15 @@ The `@implements` macro takes two arguments.
 2. The type for which the interface is implemented.
 =#
 
-@implements Animals.AnimalInterface{(:walk,:talk)} Duck
+@implements Animals.AnimalInterface{(:walk,:talk)} Duck [Duck(1), Duck(2)]
 
 # Now let's see what happens when the interface is not correctly implemented.
 struct Chicken <: Animals.Animal end
 
 # As expected, the tests fail
-chickens = [Chicken()]
+chickens = 
 try
-    Interfaces.test(Animals.AnimalInterface, Chicken, chickens)
+    Interfaces.test(Animals.AnimalInterface, Chicken)
 catch e
     print(e)
 end
