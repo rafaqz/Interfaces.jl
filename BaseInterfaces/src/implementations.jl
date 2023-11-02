@@ -17,7 +17,7 @@
 
 @implements DictInterface{:setindex!} Dict [Arguments(d=Dict(:a => 1, :b => 2), k=:c, v=3)]
 @implements DictInterface{:setindex!} IdDict [Arguments(d=IdDict(:a => 1, :b => 2), k=:c, v=3)]
-# This errors because the ref is garbage collected?
+# This errors because the ref is garbage collected
 # @implements DictInterface{:setindex!} WeakKeyDict [Arguments(; d=WeakKeyDict(Ref(1) => 1, Ref(2) => 2), k=Ref(3), v=3)]
 @implements DictInterface Base.EnvDict [Arguments(d=Base.EnvDict())]
 @implements DictInterface Base.ImmutableDict [Arguments(d=Base.ImmutableDict(:a => 1, :b => 2))]
@@ -29,12 +29,16 @@ end
 @implements IterationInterface{(:reverse,:indexing)} StepRange [1:2:10, 20:-10:-20]
 @implements IterationInterface{(:reverse,:indexing)} Array [[1, 2, 3, 4], [:a :b; :c :d]]
 @implements IterationInterface{(:reverse,:indexing)} Tuple [(1, 2, 3, 4)]
-@implements IterationInterface{(:reverse,:indexing)} NamedTuple [(a=1, b=2, c=3, d=4)]
+@static if VERSION >= v"1.9.0"
+    @implements IterationInterface{(:reverse,:indexing)} NamedTuple [(a=1, b=2, c=3, d=4)]
+else
+    @implements IterationInterface{:indexing} NamedTuple [(a=1, b=2, c=3, d=4)] # No reverse on 1.6
+end
 # @implements IterationInterface{(:reverse,:indexing)} String
 # @implements IterationInterface{(:reverse,:indexing)} Pair
 # @implements IterationInterface{(:reverse,:indexing)} Number
 # @implements IterationInterface{(:reverse,:indexing)} Base.EachLine
-@implements IterationInterface{(:reverse,)} Base.Generator [(i for i in 1:5), (i for i in 1:5)]
+@implements IterationInterface{:reverse} Base.Generator [(i for i in 1:5), (i for i in 1:5)]
 # @implements IterationInterface Set
 # @implements IterationInterface BitSet
 # @implements IterationInterface IdDict
