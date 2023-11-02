@@ -100,5 +100,5 @@ In summary, there are two things to remember:
 using Test  #src
 
 @test Interfaces.test(Group.GroupInterface, Float64)  #src
-@test !Interfaces.test(Group.GroupInterface, int_pairs)  #src
+@test !Interfaces.test(Group.GroupInterface, Int, int_pairs)  #src
 @test_throws ArgumentError Interfaces.test(Group.GroupInterface, Float64, int_pairs)  #src
