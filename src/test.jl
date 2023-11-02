@@ -41,7 +41,8 @@ function check_coherent_types(O::Type, tow::TestObjectWrapper)
 end
 
 """
-    test(::Type{<:Interface}, module::Module)
+    test(m::Module)
+    test(::Type{<:Interface}, m::Module)
     test(::Type{<:Interface}, obj::Type)
 
 Test if an interface is implemented correctly for an object,
