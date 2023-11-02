@@ -50,7 +50,7 @@ returning `true` or `false`.
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type, mod::Module; kw...) 
+function test(T::Type{<:Interface}, mod::Module; kw...) 
     methodlist = methods(implements, Tuple{T,<:Any})
     _test_module(mod, methodlist; kw...)
 end
