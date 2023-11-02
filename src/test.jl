@@ -1,9 +1,3 @@
-# Wrap objects so we don't get confused iterating
-# inside the objects themselves during tests.
-struct TestObjectWrapper{O}
-    objects::O
-end
-
 struct InterfaceError <: Exception 
     t::Type
     name::Symbol
@@ -16,8 +10,14 @@ end
 function Base.showerror(io::IO, ie::InterfaceError)
     printstyled("InterfaceError: "; color=:red)
     numstring = isnothing(ie.num) ? "" : " $(ie.num)"
-    println("test for $(ie.t) :$(ie.name)$(ie.numstring)$(ie.desc) threw a $(typeof(ie.e)) \n For test object $(ie.obj):\n")
-    Base.showerror(io, e)
+    println("test for $(ie.t) :$(ie.name)$(numstring)$(ie.desc) threw a $(typeof(ie.e)) \n For test object $(ie.obj):\n")
+    Base.showerror(io, ie.e)
+end
+
+# Wrap objects so we don't get confused iterating
+# inside the objects themselves during tests.
+struct TestObjectWrapper{O}
+    objects::O
 end
 
 Base.iterate(tow::TestObjectWrapper, args...) = iterate(tow.objects, args...)
@@ -34,7 +34,6 @@ function check_coherent_types(O::Type, obj)
         throw(ArgumentError("""Each tested object must either be an instance of `$O` or an instance of `Arguments` whose field types include at least one subtype of `$O`. You provided a `$(typeof(obj))` instead. """))
     end
 end
-
 function check_coherent_types(O::Type, tow::TestObjectWrapper)
     for obj in tow
         check_coherent_types(O::Type, obj)
