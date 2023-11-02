@@ -64,10 +64,9 @@ end
 function _test_module(mod, methodlist; kw...)
     all(methodlist) do m
         m.module == mod || return true
-        b = m.sig isa UnionAll ? m.sig.body : m.sig
         # We make this signature in the @interface macro
         # so we know it is this consistent
-
+        b = m.sig isa UnionAll ? m.sig.body : m.sig
         t = b.parameters[2].var.ub
         if t isa UnionAll
             T = t.body.name.wrapper
