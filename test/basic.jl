@@ -85,9 +85,9 @@ The `@implements` macro takes two arguments.
 struct Chicken <: Animals.Animal end
 
 # As expected, the tests fail
-chickens = 
+chickens = [Chicken()]
 try
-    Interfaces.test(Animals.AnimalInterface, Chicken)
+    Interfaces.test(Animals.AnimalInterface, Chicken, chickens)
 catch e
     print(e)
 end
