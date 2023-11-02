@@ -41,42 +41,55 @@ function check_coherent_types(O::Type, tow::TestObjectWrapper)
 end
 
 """
-    test(m::Module)
-    test(::Type{<:Interface}, m::Module)
-    test(::Type{<:Interface}, obj::Type)
+    test(::Type{<:Interface}, type::Type, [test_objects])
+    test(mod::Module)
+    test(::Type{<:Interface})
+    test(::Type{<:Interface}, mod::Module)
 
-Test if an interface is implemented correctly for an object,
-returning `true` or `false`.
+Test if an interface is implemented correctly, returning `true` or `false`.
+
+There are a number of ways to select implementations to test:
+
+- If an `Interface` and `Type` are passed, the implementation for that type will be tested.
+- If a `Module` is passed, all interface implementations defined in it will be tested. 
+- If only an `Interface` is passed, all implementations of it are tested
+- If both a `Module` and an `Interface` are passed, test the intersection 
+    of implementations of the `Interface` for the `Module`.
 
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type{<:Interface}, mod::Module; kw...) 
-    methodlist = methods(implements, Tuple{T,<:Any})
-    _test_module(mod, methodlist; kw...)
-end
-function test(mod::Module; kw...) 
-    methodlist = methods(implements, Tuple{<:Any,<:Any})
-    _test_module(mod, methodlist; kw...)
-end
-
-
-function _test_module(mod, methodlist; kw...)
+test(T::Type{<:Interface}, mod::Module; kw...) = _test_module_implements(T, mod; kw...)
+test(mod::Module; kw...) = _test_module_implements(Any, mod; kw...)
+test(T::Type{<:Interface}; kw...) = _test_module_implements(T, nothing; kw...)
+# Here we test all the `implements` methods in `methodlist` that were defined in `mod`.
+# Basically we are using the `implements` method table as the global state of all
+# available implementations.
+function _test_module_implements(T::Type, mod; kw...)
+    (T == Any || T isa UnionAll) || throw(ArgumentError("Interface options not accepted for more than one implementation"))
+    # Get all methods for `implements(T, x)`
+    methodlist = methods(Interfaces.implements, Tuple{Type{T},Any})
+    # Check that all found methods are either unrequired, or pass their tests
     all(methodlist) do m
-        m.module == mod || return true
-        # We make this signature in the @interface macro
-        # so we know it is this consistent
+        (isnothing(mod) && m.module != Interfaces) || m.module == mod || return true
+        # We define this signature in the @interface macro so we know it is this consistent.
+        # There may be some methods to help with these things?
+        
+        # Handle either Type or UnionAll for the method signature parameters
         b = m.sig isa UnionAll ? m.sig.body : m.sig
-        t = b.parameters[2].var.ub
-        if t isa UnionAll
-            T = t.body.name.wrapper
-        else
-            T = t.name.wrapper
-        end
-        O = b.parameters[3].var.ub
-        @show T O typeof(T) typeof(O)
 
-        return test(T, O; kw...)
+        # Skip the fallback methods
+        b.parameters[2] == Type{<:Interface} && return true
+
+        # Skip the Type versions of implements and keep the UnionAll
+        t = b.parameters[2].var.ub
+        t isa UnionAll || return true
+
+        interface = t.body.name.wrapper
+        implementation = b.parameters[3].var.ub
+        implementation == Any && return true
+
+        return test(interface, implementation; kw...)
     end
 end
 
@@ -149,15 +162,13 @@ function _test(T, name::Symbol, condition, obj, i=nothing)
     obj_copy = deepcopy(obj)
     res = try
         f = condition isa Pair ? condition[2] : condition
-        # GC.enable(false)
         f(obj_copy)
-        # GC.enable(true)
-        # Allow returning a function or tuple of functions that are tested again
     catch e
         desc = condition isa Pair ? string(" \"", condition[1], "\"") : ""
         rethrow(InterfaceError(T, name, i, desc, obj, e))
     end
 
+    # Allow returning a function or tuple of functions that are tested again
     if res isa Union{Pair,Tuple,Base.Callable}
         return _test(T, name, res, obj, i)
     else

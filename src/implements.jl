@@ -20,15 +20,11 @@ implements(::Type{<:Interface}, obj::Type) = false
 
 """
     @implements(interface, objtype)
-    @implements(dev, interface, objtype)
 
 Declare that an interface implements an interface, or multipleinterfaces.
 
 The macro can only be used once per module for any one type. To define
 multiple interfaces a type implements, combine them in square brackets.
-
-Passing the keyword `dev` as the first argument lets us show test output during development.
-Do not use `dev` in production code, or output will appear during package precompilation.
 
 # Example
 
@@ -42,10 +38,6 @@ using BaseInterfaces
 """
 macro implements(interface, objtype, test_objects)
     _implements_inner(interface, objtype, test_objects)
-end
-macro implements(dev::Symbol, interface, objtype, test_objects)
-    dev == :dev || error("3 arg version of `@implements must start with `dev`, and should only be used in testing")
-    _implements_inner(interface, objtype, test_objects; show=true)
 end
 function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
