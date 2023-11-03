@@ -1,14 +1,14 @@
 name = "BaseInterfaces"
 uuid = "0b829d9d-522b-4e79-acc1-14feb8e2795d"
 authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 Interfaces = "85a1e053-f937-4924-92a5-1367d23b7b87"
 
 [compat]
 julia = "1.6"
-Interfaces = "0.2"
+Interfaces = "0.3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
