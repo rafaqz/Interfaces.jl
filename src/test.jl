@@ -41,15 +41,71 @@ function check_coherent_types(O::Type, tow::TestObjectWrapper)
 end
 
 """
-    test(::Type{<:Interface}, obj)
+    test(; kw...)
+    test(mod::Module; kw...)
+    test(::Type{<:Interface}; kw...)
+    test(::Type{<:Interface}, mod::Module; kw...)
+    test(::Type{<:Interface}, type::Type, [test_objects]; kw...)
 
-Test if an interface is implemented correctly for an object,
-returning `true` or `false`.
+Test if an interface is implemented correctly, returning `true` or `false`.
+
+There are a number of ways to select implementations to test:
+
+- With no arguments, test all defined `Interface`s currenty imported.
+- If a `Module` is passed, all `Interface` implementations defined in it will be tested. 
+    This is probably the best option to put in package tests.
+- If only an `Interface` is passed, all implementations of it are tested
+- If both a `Module` and an `Interface` are passed, test the intersection 
+    of implementations of the `Interface` for the `Module`.
+- If an `Interface` and `Type` are passed, the implementation for that type will be tested.
 
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Keys
+function test end
+test(; kw...) = _test_module_implements(Any, nothing; kw...)
+test(T::Type{<:Interface}, mod::Module; kw...) =
+    _test_module_implements(Type{_check_no_options(T)}, mod; kw...)
+test(mod::Module; kw...) = _test_module_implements(Any, mod; kw...)
+test(T::Type{<:Interface}; kw...) =
+    _test_module_implements(Type{_check_no_options(T)}, nothing; kw...)
+
+function _check_no_options(T)
+    T isa UnionAll || throw(ArgumentError("Interface options not accepted for more than one implementation"))
+    return T
+end
+# Here we test all the `implements` methods in `methodlist` that were defined in `mod`.
+# Basically we are using the `implements` method table as the global state of all
+# available implementations.
+function _test_module_implements(T, mod; kw...)
+    # (T == Any || T isa UnionAll) || throw(ArgumentError("Interface options not accepted for more than one implementation"))
+    # Get all methods for `implements(T, x)`
+    methodlist = methods(Interfaces.implements, Tuple{T,Any})
+    # Check that all found methods are either unrequired, or pass their tests
+    all(methodlist) do m
+        (isnothing(mod) && m.module != Interfaces) || m.module == mod || return true
+        # We define this signature in the @interface macro so we know it is this consistent.
+        # There may be some methods to help with these things?
+        
+        # Handle either Type or UnionAll for the method signature parameters
+        b = m.sig isa UnionAll ? m.sig.body : m.sig
+
+        # Skip the fallback methods
+        b.parameters[2] == Type{<:Interface} && return true
+
+        # Skip the Type versions of implements and keep the UnionAll
+        t = b.parameters[2].var.ub
+        t isa UnionAll || return true
+
+        interface = t.body.name.wrapper
+        implementation = b.parameters[3].var.ub
+        implementation == Any && return true
+
+        return test(interface, implementation; kw...)
+    end
+end
+
+function test(T::Type{<:Interface{Keys}}, O::Type, test_objects=test_objects(T, O); kw...) where Keys
     # Allow passing the keys in the abstract type
     # But get them out and put them in the `keys` keyword
     T1 = _get_type(T).name.wrapper
@@ -57,7 +113,7 @@ function test(T::Type{<:Interface{Keys}}, O::Type, test_objects; kw...) where Ke
     # And run the tests on the parameterless type
     return _test(T1, O, objs; keys=Keys, kw...)
 end
-function test(T::Type{<:Interface}, O::Type, test_objects; kw...)
+function test(T::Type{<:Interface}, O::Type, test_objects=test_objects(T, O); kw...)
     objs = TestObjectWrapper(test_objects)
     return _test(T, O, objs; kw...)
 end
@@ -119,12 +175,12 @@ function _test(T, name::Symbol, condition, obj, i=nothing)
     res = try
         f = condition isa Pair ? condition[2] : condition
         f(obj_copy)
-        # Allow returning a function or tuple of functions that are tested again
     catch e
         desc = condition isa Pair ? string(" \"", condition[1], "\"") : ""
         rethrow(InterfaceError(T, name, i, desc, obj, e))
     end
 
+    # Allow returning a function or tuple of functions that are tested again
     if res isa Union{Pair,Tuple,Base.Callable}
         return _test(T, name, res, obj, i)
     else

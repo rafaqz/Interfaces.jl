@@ -20,15 +20,11 @@ implements(::Type{<:Interface}, obj::Type) = false
 
 """
     @implements(interface, objtype)
-    @implements(dev, interface, objtype)
 
 Declare that an interface implements an interface, or multipleinterfaces.
 
 The macro can only be used once per module for any one type. To define
 multiple interfaces a type implements, combine them in square brackets.
-
-Passing the keyword `dev` as the first argument lets us show test output during development.
-Do not use `dev` in production code, or output will appear during package precompilation.
 
 # Example
 
@@ -40,14 +36,10 @@ using BaseInterfaces
 @implements BaseInterfaces.IterationInterface{(:indexing,:reverse)} MyObject
 ```
 """
-macro implements(interface, objtype)
-    _implements_inner(interface, objtype)
+macro implements(interface, objtype, test_objects)
+    _implements_inner(interface, objtype, test_objects)
 end
-macro implements(dev::Symbol, interface, objtype)
-    dev == :dev || error("3 arg version of `@implements must start with `dev`, and should only be used in testing")
-    _implements_inner(interface, objtype; show=true)
-end
-function _implements_inner(interface, objtype; show=false)
+function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
         optional_keys = interface.args[2]
@@ -70,6 +62,7 @@ function _implements_inner(interface, objtype; show=false)
             $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
         # Define which optional components the object implements
         $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
+        $Interfaces.test_objects(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $test_objects
         nothing
     end |> esc
 end
