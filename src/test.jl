@@ -41,34 +41,39 @@ function check_coherent_types(O::Type, tow::TestObjectWrapper)
 end
 
 """
-    test(::Type{<:Interface}, type::Type, [test_objects])
-    test(mod::Module)
-    test(::Type{<:Interface})
-    test(::Type{<:Interface}, mod::Module)
+    test(; kw...)
+    test(mod::Module; kw...)
+    test(::Type{<:Interface}; kw...)
+    test(::Type{<:Interface}, mod::Module; kw...)
+    test(::Type{<:Interface}, type::Type, [test_objects]; kw...)
 
 Test if an interface is implemented correctly, returning `true` or `false`.
 
 There are a number of ways to select implementations to test:
 
-- If an `Interface` and `Type` are passed, the implementation for that type will be tested.
-- If a `Module` is passed, all interface implementations defined in it will be tested. 
+- With no arguments, test all defined `Interface`s currenty imported.
+- If a `Module` is passed, all `Interface` implementations defined in it will be tested. 
+    This is probably the best option to put in package tests.
 - If only an `Interface` is passed, all implementations of it are tested
 - If both a `Module` and an `Interface` are passed, test the intersection 
     of implementations of the `Interface` for the `Module`.
+- If an `Interface` and `Type` are passed, the implementation for that type will be tested.
 
 If no interface type is passed, Interfaces.jl will find all the
 interfaces available and test them.
 """
-test(T::Type{<:Interface}, mod::Module; kw...) = _test_module_implements(T, mod; kw...)
+function test end
+test(; kw...) = _test_module_implements(Any, nothing; kw...)
+test(T::Type{<:Interface}, mod::Module; kw...) = _test_module_implements(Type{T}, mod; kw...)
 test(mod::Module; kw...) = _test_module_implements(Any, mod; kw...)
-test(T::Type{<:Interface}; kw...) = _test_module_implements(T, nothing; kw...)
+test(T::Type{<:Interface}; kw...) = _test_module_implements(Type{T}, nothing; kw...)
 # Here we test all the `implements` methods in `methodlist` that were defined in `mod`.
 # Basically we are using the `implements` method table as the global state of all
 # available implementations.
-function _test_module_implements(T::Type, mod; kw...)
-    (T == Any || T isa UnionAll) || throw(ArgumentError("Interface options not accepted for more than one implementation"))
+function _test_module_implements(T, mod; kw...)
+    # (T == Any || T isa UnionAll) || throw(ArgumentError("Interface options not accepted for more than one implementation"))
     # Get all methods for `implements(T, x)`
-    methodlist = methods(Interfaces.implements, Tuple{Type{T},Any})
+    methodlist = methods(Interfaces.implements, Tuple{T,Any})
     # Check that all found methods are either unrequired, or pass their tests
     all(methodlist) do m
         (isnothing(mod) && m.module != Interfaces) || m.module == mod || return true

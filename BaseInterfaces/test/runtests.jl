@@ -5,10 +5,13 @@ using Test
 # Test some Test objects
 @implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Test.GenericSet [Test.GenericSet(Set((1, 2)))]
 @implements DictInterface Test.GenericDict [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)]
-@test Interfaces.test(Main)
+
+# Test all interfaces
+@test Interfaces.test()
 
 # Test all interfaaces in BaseInterfaces
 @test Interfaces.test(BaseInterfaces)
+@test Interfaces.test(Main)
 
 # Or test each interface in the module individually
 @test Interfaces.test(ArrayInterface, BaseInterfaces)
