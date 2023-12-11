@@ -39,6 +39,7 @@ using BaseInterfaces, Interfaces
 macro implements(interface, objtype, test_objects)
     _implements_inner(interface, objtype, test_objects)
 end
+
 function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
@@ -59,6 +60,8 @@ function _implements_inner(interface, objtype, test_objects; show=false)
         # Define a `implements` trait stating that `objtype` implements `interface`
         $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
         $Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
+            $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
+        $Interfaces.implements(T::Type{<:$interfacetype{<:Any,Options}}, O::Type{<:$objtype}) where Options = 
             $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
         # Define which optional components the object implements
         $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys

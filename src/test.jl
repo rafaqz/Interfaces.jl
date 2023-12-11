@@ -72,10 +72,9 @@ test(mod::Module; kw...) = _test_module_implements(Any, mod; kw...)
 test(T::Type{<:Interface}; kw...) =
     _test_module_implements(Type{_check_no_options(T)}, nothing; kw...)
 
-function _check_no_options(T)
-    T isa UnionAll || throw(ArgumentError("Interface options not accepted for more than one implementation"))
-    return T
-end
+_check_no_options(T::Type) = T
+_check_no_options(::Type{<:Interface{Keys}}) where Keys =
+    throw(ArgumentError("Interface options not accepted for more than one implementation"))
 # Here we test all the `implements` methods in `methodlist` that were defined in `mod`.
 # Basically we are using the `implements` method table as the global state of all
 # available implementations.
@@ -99,7 +98,11 @@ function _test_module_implements(T, mod; show=true, kw...)
         t = b.parameters[2].var.ub
         t isa UnionAll || return nothing, true
 
-        interface = t.body.name.wrapper
+        if t.body isa UnionAll
+            interface = t.body.body.name.wrapper
+        else
+            interface = t.body.name.wrapper
+        end
         implementation = b.parameters[3].var.ub
         implementation == Any && return nothing, true
 

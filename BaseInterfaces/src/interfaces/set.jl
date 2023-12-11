@@ -67,4 +67,4 @@ set_components = (;
     )
 )
 
-@interface SetInterface AbstractSet set_components "The `AbstractSet` interface"
+@interface SetInterface <: IterationInterface AbstractSet set_components "The `AbstractSet` interface"
