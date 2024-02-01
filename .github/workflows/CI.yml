@@ -34,6 +34,15 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
+      - name: Install Julia dependencies
+          shell: julia --project=monorepo {0}
+          run: |
+            using Pkg;
+            # dev sub packages 
+            pkg"dev . ./BaseInterfaces ./InterfacesCore"
+      - name: Run InterfacesCore tests
+        run: julia --project=InterfacesCore -e 'using Pkg; pkg"dev ."; pkg"update"; pkg"test"'
+        shell: bash
       - uses: julia-actions/julia-runtest@v1
       - name: Run BaseInterfaces tests
         run: julia --project=BaseInterfaces -e 'using Pkg; pkg"dev ."; pkg"update"; pkg"test"'
