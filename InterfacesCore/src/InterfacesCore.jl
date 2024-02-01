@@ -19,7 +19,7 @@ Components is an `Tuple` of `Symbol`.
 
 abstract type Interface{Components} end
 
-macro interface_type(interface::Symbol, type)
+macro interface_core(interface::Symbol, type)
     quote
         @assert $type isa Type
         abstract type $interface{Components} <: $InterfacesCore.Interface{Components} end

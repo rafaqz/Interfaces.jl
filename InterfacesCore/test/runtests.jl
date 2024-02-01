@@ -1,4 +1,4 @@
 using InterfacesCore, Test
 
-@interface_type TestInterface 
+@interface_core TestInterface 
 @test TestInterface <: Interface
