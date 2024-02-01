@@ -1,6 +1,13 @@
 module InterfacesCore
 
-export Interface, @interface_type
+export Interface, requiredtype, @interface_type
+
+"""
+    requiredtype(::Type{<:Interface})
+
+Returns the supertype required for all interface implementations.
+"""
+function requiredtype end
 
 """
     Interface{Components}
@@ -12,8 +19,11 @@ Components is an `Tuple` of `Symbol`.
 
 abstract type Interface{Components} end
 
-macro interface_type(interface::Symbol)
-    :(abstract type $interface{Components} <: $InterfacesCore.Interface{Components} end) |> esc
+macro interface_type(interface::Symbol, type)
+    quote
+        @assert $type isa Type
+        abstract type $interface{Components} <: $InterfacesCore.Interface{Components} end
+    end |> esc
 end
 
 end
