@@ -2,7 +2,6 @@ using Aqua
 using Documenter
 using Interfaces
 using Test
-using Aqua
 
 @testset verbose = true "Interfaces.jl" begin
     # Formal tests

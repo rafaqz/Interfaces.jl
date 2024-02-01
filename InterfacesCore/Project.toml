@@ -1,0 +1,14 @@
+name = "InterfacesCore"
+uuid = "a94bad63-e719-4205-a4a7-d6d26991555a"
+authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
+version = "0.1"
+
+[compat]
+Test = "1"
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

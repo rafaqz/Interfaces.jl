@@ -3,7 +3,14 @@ uuid = "85a1e053-f937-4924-92a5-1367d23b7b87"
 authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
 version = "0.3.0"
 
+[deps]
+InterfacesCore = "a94bad63-e719-4205-a4a7-d6d26991555a"
+
 [compat]
+Aqua = "0.8"
+Documenter = "1"
+InterfacesCore = "0.1"
+Test = "1"
 julia = "1.6"
 
 [extras]

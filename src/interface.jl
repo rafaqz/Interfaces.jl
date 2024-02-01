@@ -1,14 +1,5 @@
 
 """
-    Interface{Components}
-
-Abstract supertype for all Interfaces.jl interfaces.
-
-Components is an `Tuple` of `Symbol`.
-"""
-abstract type Interface{Components} end
-
-"""
     optional_keys(T::Type{<:Interface}, O::Type)
 
 Get the keys for the optional components of an [`Interface`](@ref),

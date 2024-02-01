@@ -5,6 +5,8 @@ A Julia package for specifying and testing interfaces (conditions verified by a 
 """
 module Interfaces
 
+using InterfacesCore
+
 export Arguments
 export @implements, @interface
 
