@@ -33,11 +33,10 @@ EltypeUnknown()	(none)
     # that implement the interface.
     mandatory = (
         iterate = (
-            x -> !isempty(x),
-            x -> !isnothing(iterate(x)),
-            x -> !isnothing(iterate(iterate(x))),
-            x -> iterate(x) isa Tuple,
-            x -> iterate(x, last(iterate(x))) isa Tuple,
+            "test iterator is not empty" => x -> !isempty(x),
+            "iterate does not return `nothing`" => x -> !isnothing(iterate(x)),
+            "iterate returns a Tuple" => x -> iterate(x) isa Tuple{<:Any,<:Any},
+            "iterate returns a Tuple" => x -> iterate(x, last(iterate(x))) isa Union{Nothing,Tuple{<:Any,<:Any}},
         ),
         isiterable = x -> Base.isiterable(typeof(x)),
         eltype = x -> begin

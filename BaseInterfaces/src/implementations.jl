@@ -2,7 +2,6 @@
 
 # @implements ArrayInterface Base.LogicalIndex # No getindex
 
-
 @implements ArrayInterface{:logical} UnitRange [2:10]
 @implements ArrayInterface{:logical} StepRange [2:1:10]
 @implements ArrayInterface{:logical} Base.OneTo [Base.OneTo(10)]
@@ -34,15 +33,18 @@ end
 else
     @implements IterationInterface{:indexing} NamedTuple [(a=1, b=2, c=3, d=4)] # No reverse on 1.6
 end
-# @implements IterationInterface{(:reverse,:indexing)} String
-# @implements IterationInterface{(:reverse,:indexing)} Pair
-# @implements IterationInterface{(:reverse,:indexing)} Number
-# @implements IterationInterface{(:reverse,:indexing)} Base.EachLine
+@implements IterationInterface{(:reverse,:indexing)} String ["abcdefg"]
+@implements IterationInterface{(:reverse,:indexing)} Pair [:a => 2]
+@implements IterationInterface Number [1, 1.0, 1.0f0, UInt(8), false]
 @implements IterationInterface{:reverse} Base.Generator [(i for i in 1:5), (i for i in 1:5)]
-# @implements IterationInterface Set
-# @implements IterationInterface BitSet
+# @implements IterationInterface{(:reverse,:indexing)} Base.EachLine [eachline(joinpath(dirname(pathof(BaseInterfaces)), "implementations.jl"))]
+
+@implements IterationInterface Set [Set((1, 2, 3, 4))]
+@implements IterationInterface BitSet [BitSet((1, 2, 3, 4))]
+@implements IterationInterface Dict [Dict("a" => 2, :b => 3.0)]
+@implements IterationInterface Base.EnvDict [Arguments(d=Base.EnvDict())]
+@implements IterationInterface Base.ImmutableDict [Arguments(d=Base.ImmutableDict(:a => 1, :b => 2))]
 # @implements IterationInterface IdDict
-# @implements IterationInterface Dict
 # @implements IterationInterface WeakKeyDict
 
 # TODO add grouping to reduce the number of options
@@ -50,3 +52,4 @@ end
 @implements SetInterface{(:copy,:empty,:emptymutable,:hasfastin,:setdiff,:intersect,:union,:empty!,:delete!,:push!,:copymutable,:sizehint!)} BitSet [BitSet((1, 2))]
 @implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Base.KeySet [Base.KeySet(Dict(:a=>1, :b=>2))]
 @implements SetInterface{(:empty,:hasfastin,:intersect,:union,:sizehint!)} Base.IdSet (s = Base.IdSet(); push!(s, "a"); push!(s, "b"); [s])
+
