@@ -83,33 +83,40 @@ array_components = (;
            "Can index with a Vector of Int" =>  A -> begin
                i = [first(axes(A, 1)):2:last(axes(A, 1))...]
                res = A[i, ntuple(_ -> 1, ndims(A) - 1)...]
-               size(res) == (count(i),)
+               size(res) == (length(i),)
            end,
            "Can index with a Vector of Int32" => A -> begin
                i = Int32[first(axes(A, 1)):2:last(axes(A, 1))...]
                res = A[i, ntuple(_ -> 1, ndims(A) - 1)...]
-               size(res) == (count(i),)
+               size(res) == (length(i),)
            end,
            "Can index with a Vector of Int with trailing ones" =>  A -> begin
                i = [first(axes(A, 1)):2:last(axes(A, 1))...]
                res = A[i, ntuple(_ -> 1, ndims(A) + 1)...]
-               size(res) == (count(i),)
+               size(res) == (length(i),)
            end,
            "Can index with a Vector of Int with trailing colons" =>  A -> begin
                i = [first(axes(A, 1)):2:last(axes(A, 1))...]
                res = A[i, ntuple(_ -> :, ndims(A) + 1)...]
-               size(res) == (count(i), ntuple(i -> size(A, i + 1), ndims(A) + 1)...)
+               size(res) == (length(i), ntuple(i -> size(A, i + 1), ndims(A) + 1)...)
            end,
+        ), 
+        indexstyle = "IndexStyle returns IndexCartesian or IndexLinear" => 
+            A -> IndexStyle(A) in (IndexCartesian(), IndexLinear()),
+    ),
+    # TODO implement all the optional conditions
+    optional = (;
+        logical = (
            "Can index with logical indices" =>  A -> begin
-               l = [iseven(i) for i in axes(A, 1)]
+               l = [iseven(i) for i in 1:size(A, 1)]
                size(A[l, ntuple(_ -> 1, ndims(A) - 1)...]) == (count(l),)
            end,
            "Can index with logical indices and trailing ones" =>  A -> begin
-               l = [iseven(i) for i in axes(A, 1)]
+               l = [iseven(i) for i in 1:size(A, 1)]
                size(A[l, ntuple(_ -> 1, ndims(A) + 1)...]) == (count(l),)
            end,
            "Can index with logical indices and trailing colons" =>  A -> begin
-               l = [iseven(i) for i in axes(A, 1)]
+               l = [iseven(i) for i in 1:size(A, 1)]
                size(A[l, ntuple(_ -> :, ndims(A) + 1)...]) == (count(l), ntuple(i -> size(A, i + 1), ndims(A) + 1)...)
            end,
            "Can index with multidimensional logical indices" =>  A -> begin
@@ -131,11 +138,6 @@ array_components = (;
                size(A[l, :, :, :]) == (count(l), 1, 1, 1)
            end,
         ),
-        indexstyle = "IndexStyle returns IndexCartesian or IndexLinear" => 
-            A -> IndexStyle(A) in (IndexCartesian(), IndexLinear()),
-    ),
-    # TODO implement all the optional conditions
-    optional = (;
         setindex! = (
             A -> length(A) > 1 || throw(ArgumentError("Test arrays must have more than one element to test setindex!")),
             "setindex! can write the first to the last element" => 

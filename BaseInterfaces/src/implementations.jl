@@ -3,17 +3,17 @@
 # @implements ArrayInterface Base.LogicalIndex # No getindex
 
 
-@implements ArrayInterface UnitRange [2:10]
-@implements ArrayInterface StepRange [2:1:10]
-@implements ArrayInterface Base.OneTo [Base.OneTo(10)]
+@implements ArrayInterface{:logical} UnitRange [2:10]
+@implements ArrayInterface{:logical} StepRange [2:1:10]
+@implements ArrayInterface{:logical} Base.OneTo [Base.OneTo(10)]
 @implements ArrayInterface Base.Slice [Base.Slice(100:150)]
-@implements ArrayInterface Base.CodeUnits [codeunits("abcde")]
 @implements ArrayInterface Base.IdentityUnitRange [Base.IdentityUnitRange(100:150)]
-@implements ArrayInterface{(:setindex!,:similar_type,:similar_eltype,:similar_size)} Array [[3, 2], ['a' 'b'; 'n' 'm']]
-@implements ArrayInterface{(:setindex!,:similar_type,:similar_size)} BitArray [BitArray([false true; true false])]
-@implements ArrayInterface{:setindex!} SubArray [view([7, 2], 1:2)]
-@implements ArrayInterface{:setindex!} PermutedDimsArray [PermutedDimsArray([7 2], (2, 1))]
-@implements ArrayInterface{:setindex!} Base.ReshapedArray [reshape(view([7, 2], 1:2), 2, 1)]
+@implements ArrayInterface{:logical} Base.CodeUnits [codeunits("abcde")]
+@implements ArrayInterface{(:logical,:setindex!,:similar_type,:similar_eltype,:similar_size)} Array [[3, 2], ['a' 'b'; 'n' 'm']]
+@implements ArrayInterface{(:logical,:setindex!,:similar_type,:similar_size)} BitArray [BitArray([false true; true false])]
+@implements ArrayInterface{(:logical,:setindex!)} SubArray [view([7, 2], 1:2)]
+@implements ArrayInterface{(:logical,:setindex!)} PermutedDimsArray [PermutedDimsArray([7 2], (2, 1))]
+@implements ArrayInterface{(:logical,:setindex!)} Base.ReshapedArray [reshape(view([7, 2], 1:2), 2, 1)]
 
 @implements DictInterface{:setindex!} Dict [Arguments(d=Dict(:a => 1, :b => 2), k=:c, v=3)]
 @implements DictInterface{:setindex!} IdDict [Arguments(d=IdDict(:a => 1, :b => 2), k=:c, v=3)]
