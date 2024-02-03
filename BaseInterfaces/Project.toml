@@ -4,6 +4,7 @@ authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
 version = "0.3.0"
 
 [deps]
+Tets = "1"
 Interfaces = "85a1e053-f937-4924-92a5-1367d23b7b87"
 
 [compat]
