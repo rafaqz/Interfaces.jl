@@ -37,29 +37,102 @@ _ndims(::AbstractArray{<:Any,N}) where N = N
 
 array_components = (;
     mandatory = (;
-        type = A -> A isa AbstractArray,
         eltype = (
             A -> eltype(A) isa Type,
             A -> eltype(A) == _eltype(A),
+            # Everything else is tested later
         ),
         ndims = (
             A -> ndims(A) isa Int,
             A -> ndims(A) == _ndims(A),
+            # Everything else is tested later
         ),
         size = (
             "size(A) returns a tuple of Integer" => A -> size(A) isa NTuple{<:Any,Integer},
             "length of size(A) matches ndims(A)" => A -> length(size(A)) == ndims(A),
         ),
         getindex = (
-           "Can index with begin/firstinex" => A -> A[begin] isa eltype(A),
+           "Can index with begin/firstindex" => A -> A[begin] isa eltype(A),
            "Can index with end/lastindex" => A -> A[end] isa eltype(A),
            "Can index with all indices in `eachindex(A)`" => A -> all(x -> A[x] isa eltype(A), eachindex(A)),
-           "Can index with multiple dimensions" => A -> A[map(first, axes(A))...] isa eltype(A),
-           "Can use trailing ones" => A -> A[map(first, axes(A))..., 1, 1, 1] isa eltype(A),
-           "Can index with CartesianIndex" => A -> A[CartesianIndex(map(first, axes(A))...)] isa eltype(A),
-           "Can use trailing ones in CartesianIndex" => A -> A[CartesianIndex(map(first, axes(A))..., 1, 1, 1)] isa eltype(A),
+           "Can index with Int for multiple dimensions" => A -> A[map(first, axes(A))...] isa eltype(A),
+           "Can index with Int for multiple dimensions and trailing ones" => A -> A[map(first, axes(A))..., 1, 1, 1] isa eltype(A),
+           "Can index with Int for multiple dimensions and trailing colons" => A -> size(A[map(first, axes(A))..., :, :, :]) == (1, 1, 1),
+           "Can index with CartesianIndex" => 
+               A -> A[CartesianIndex(map(first, axes(A))...)] isa eltype(A),
+           "Can index with CartesianIndex and trailing ones" => 
+               A -> A[CartesianIndex(map(first, axes(A))...), 1, 1, 1] isa eltype(A),
+           "Can index with CartesianIndices" => 
+               A -> size(A[CartesianIndices(map(a -> first(a):last(a), axes(A)))]) == size(A),
+           "Can index with CartesianIndices and trailing ones" => 
+               A -> size(A[CartesianIndices(map(a -> first(a):last(a), axes(A))), 1, 1, 1]) == size(A),
+           "Can index with CartesianIndices and trailing colons" => 
+               A -> size(A[CartesianIndices(map(a -> first(a):last(a), axes(A))), :, :, :]) == (size(A)..., 1, 1, 1),
+           "Can index with UnitRange" => 
+               A -> size(A[map(a -> first(a):last(a), axes(A))...]) == size(A),
+           "Can index with UnitRange and trailing ones" => 
+               A -> size(A[map(a -> first(a):last(a), axes(A))..., 1, 1, 1]) == size(A),
+           "Can index with UnitRange and trailing colons" => 
+               A -> size(A[map(a -> first(a):last(a), axes(A))..., :, :, :]) == (size(A)..., 1, 1, 1),
+           "Can index with StepRange" => 
+               A -> size(A[map(a -> first(a):2:last(a), axes(A))...]) == map(a -> length(first(a):2:last(a)), axes(A)),
+           "Can index with StepRange and trailing ones" => 
+               A -> size(A[map(a -> first(a):2:last(a), axes(A))..., 1, 1, 1]) == map(a -> length(first(a):2:last(a)), axes(A)),
+           "Can index with StepRange and trailing colons" => 
+               A -> size(A[map(a -> first(a):2:last(a), axes(A))..., :, :, :]) == (map(a -> length(first(a):2:last(a)), axes(A))..., 1, 1, 1),
+           "Can index with a Vector of Int" =>  A -> begin
+               i = [first(axes(A, 1)):2:last(axes(A, 1))...]
+               res = A[i, ntuple(_ -> 1, ndims(A) - 1)...]
+               size(res) == (count(i),)
+           end,
+           "Can index with a Vector of Int32" => A -> begin
+               i = Int32[first(axes(A, 1)):2:last(axes(A, 1))...]
+               res = A[i, ntuple(_ -> 1, ndims(A) - 1)...]
+               size(res) == (count(i),)
+           end,
+           "Can index with a Vector of Int with trailing ones" =>  A -> begin
+               i = [first(axes(A, 1)):2:last(axes(A, 1))...]
+               res = A[i, ntuple(_ -> 1, ndims(A) + 1)...]
+               size(res) == (count(i),)
+           end,
+           "Can index with a Vector of Int with trailing colons" =>  A -> begin
+               i = [first(axes(A, 1)):2:last(axes(A, 1))...]
+               res = A[i, ntuple(_ -> :, ndims(A) + 1)...]
+               size(res) == (count(i), ntuple(i -> size(A, i + 1), ndims(A) + 1)...)
+           end,
+           "Can index with logical indices" =>  A -> begin
+               l = [iseven(i) for i in axes(A, 1)]
+               size(A[l, ntuple(_ -> 1, ndims(A) - 1)...]) == (count(l),)
+           end,
+           "Can index with logical indices and trailing ones" =>  A -> begin
+               l = [iseven(i) for i in axes(A, 1)]
+               size(A[l, ntuple(_ -> 1, ndims(A) + 1)...]) == (count(l),)
+           end,
+           "Can index with logical indices and trailing colons" =>  A -> begin
+               l = [iseven(i) for i in axes(A, 1)]
+               size(A[l, ntuple(_ -> :, ndims(A) + 1)...]) == (count(l), ntuple(i -> size(A, i + 1), ndims(A) + 1)...)
+           end,
+           "Can index with multidimensional logical indices" =>  A -> begin
+               l = map(CartesianIndices(A)) do I
+                   iseven(prod(Tuple(I)))
+               end
+               size(A[l]) == (count(l),)
+           end,
+           "Can index with multidimensional logical indices and trailing ones" =>  A -> begin
+               l = map(CartesianIndices(A)) do I
+                   iseven(prod(Tuple(I)))
+               end
+               size(A[l, 1, 1, 1]) == (count(l),)
+           end,
+           "Can index with multidimensional logical indices and trailing colons" =>  A -> begin
+               l = map(CartesianIndices(A)) do I
+                   iseven(prod(Tuple(I)))
+               end
+               size(A[l, :, :, :]) == (count(l), 1, 1, 1)
+           end,
         ),
-        indexstyle = "IndexStyle returns IndexCartesian or IndexLinear" => A -> IndexStyle(A) in (IndexCartesian(), IndexLinear()),
+        indexstyle = "IndexStyle returns IndexCartesian or IndexLinear" => 
+            A -> IndexStyle(A) in (IndexCartesian(), IndexLinear()),
     ),
     # TODO implement all the optional conditions
     optional = (;
