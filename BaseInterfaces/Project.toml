@@ -4,12 +4,12 @@ authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
 version = "0.3.0"
 
 [deps]
-Tets = "1"
 Interfaces = "85a1e053-f937-4924-92a5-1367d23b7b87"
 
 [compat]
 julia = "1.6"
 Interfaces = "0.3"
+Test = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
