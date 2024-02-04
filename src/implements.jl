@@ -19,7 +19,7 @@ implements(T::Type{<:Interface}, obj) = implements(T, typeof(obj))
 implements(::Type{<:Interface}, obj::Type) = false
 
 """
-    @implements(interface, objtype)
+    @implements(interface, objtype, test_objects)
 
 Declare that an interface implements an interface, or multipleinterfaces.
 
@@ -32,8 +32,8 @@ Here we implement the IterationInterface for Base julia, indicating with
 `(:indexing, :reverse)` that our object can be indexed and works with `Iterators.reverse`:
 
 ```julia
-using BaseInterfaces
-@implements BaseInterfaces.IterationInterface{(:indexing,:reverse)} MyObject
+using BaseInterfaces, Interfaces
+@implements BaseInterfaces.IterationInterface{(:indexing,:reverse)} MyObject [MyObject(1:10), MyObject(10:-1:1)]
 ```
 """
 macro implements(interface, objtype, test_objects)

@@ -137,9 +137,9 @@ function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
         mandatory_results = _test(T, components(T).mandatory, objs)
         optional_results = _test(T, optional, objs)
         if show
-            _showresults(stdout, mandatory_results, "Mandatory components")
+            _showresults(stdout, mandatory_results, "\nMandatory components")
             if !isempty(optional_results)
-                _showresults(stdout, optional_results, "Optional components")
+                _showresults(stdout, optional_results, "\nOptional components")
             end
         end
         return all(_bool(mandatory_results)) && all(_bool(optional_results))
