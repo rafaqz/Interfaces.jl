@@ -13,9 +13,9 @@ include("interfaces/dict.jl")
 include("interfaces/set.jl")
 include("interfaces/array.jl")
 
-include("implementaions/iteration.jl")
-include("implementaions/dict.jl")
-include("implementaions/set.jl")
-include("implementaions/array.jl")
+include("implementations/iteration.jl")
+include("implementations/dict.jl")
+include("implementations/set.jl")
+include("implementations/array.jl")
 
 end
