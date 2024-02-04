@@ -43,6 +43,7 @@ end
 """
     test(; kw...)
     test(mod::Module; kw...)
+    test(::Type; kw...)
     test(::Type{<:Interface}; kw...)
     test(::Type{<:Interface}, mod::Module; kw...)
     test(::Type{<:Interface}, type::Type, [test_objects]; kw...)
@@ -54,8 +55,9 @@ There are a number of ways to select implementations to test:
 - With no arguments, test all defined `Interface`s currenty imported.
 - If a `Module` is passed, all `Interface` implementations defined in it will be tested. 
     This is probably the best option to put in package tests.
-- If only an `Interface` is passed, all implementations of it are tested
-- If both a `Module` and an `Interface` are passed, test the intersection 
+- If only an `Interface` is passed, all implementations of it are tested.
+- If only a `Type` is passed, all interfaces it implements are tested.
+- If both a `Module` and an `Interface` are passed, test the intersection.
     of implementations of the `Interface` for the `Module`.
 - If an `Interface` and `Type` are passed, the implementation for that type will be tested.
 
@@ -77,13 +79,13 @@ end
 # Here we test all the `implements` methods in `methodlist` that were defined in `mod`.
 # Basically we are using the `implements` method table as the global state of all
 # available implementations.
-function _test_module_implements(T, mod; kw...)
+function _test_module_implements(T, mod; show=true, kw...)
     # (T == Any || T isa UnionAll) || throw(ArgumentError("Interface options not accepted for more than one implementation"))
     # Get all methods for `implements(T, x)`
     methodlist = methods(Interfaces.implements, Tuple{T,Any})
     # Check that all found methods are either unrequired, or pass their tests
-    all(methodlist) do m
-        (isnothing(mod) && m.module != Interfaces) || m.module == mod || return true
+    results = map(methodlist) do m
+        (isnothing(mod) && m.module != Interfaces) || m.module == mod || return nothing, true
         # We define this signature in the @interface macro so we know it is this consistent.
         # There may be some methods to help with these things?
         
@@ -91,18 +93,31 @@ function _test_module_implements(T, mod; kw...)
         b = m.sig isa UnionAll ? m.sig.body : m.sig
 
         # Skip the fallback methods
-        b.parameters[2] == Type{<:Interface} && return true
+        b.parameters[2] == Type{<:Interface} && return nothing, true
 
         # Skip the Type versions of implements and keep the UnionAll
         t = b.parameters[2].var.ub
-        t isa UnionAll || return true
+        t isa UnionAll || return nothing, true
 
         interface = t.body.name.wrapper
         implementation = b.parameters[3].var.ub
-        implementation == Any && return true
+        implementation == Any && return nothing, true
 
-        return test(interface, implementation; kw...)
+        (interface, implementation), test(interface, implementation; show, kw...)
     end
+    if show
+        println(stdout)
+        println(stdout, "Implementation summary:")
+        hasprinted = false
+        for (x, res) in results
+            isnothing(x) && continue
+            interface, implementation = x
+            hasprinted = true
+            print_imlements(interface, implementation, res)
+        end
+        hasprinted || println("\nNo implementations were found for $T and $mod")
+    end
+    return all(last, results)
 end
 
 function test(T::Type{<:Interface{Keys}}, O::Type, test_objects=test_objects(T, O); kw...) where Keys
@@ -119,11 +134,43 @@ function test(T::Type{<:Interface}, O::Type, test_objects=test_objects(T, O); kw
 end
 # Convenience method for users to test a single object
 test(T::Type{<:Interface}, obj; kw...) = test(T, typeof(obj), (obj,); kw...)
+# Test types for all the interfaces they implement
+function test(::Type{T}; show=true, kw...) where T
+    # Get every interface declaration
+    methodlist = methods(Interfaces.components)
+    results = map(methodlist) do m
+        t = m.sig.parameters[2].var.ub
+        t isa UnionAll || return true
+        interface = t.body.name.wrapper
+        # If T implements it, test that
+        if implements(interface, T)
+            interface, test(interface, T; show, kw...)
+        else
+            nothing, true
+        end
+    end
+    if show
+        println(stdout)
+        println(stdout, "Interface summary for $T:")
+        for (interface, res) in results
+            isnothing(interface) && continue
+            print_imlements(interface, T, res)
+        end
+    end
+    return all(last, results)
+end
+
+function print_imlements(interface, T, res)
+    printstyled(stdout, "  ", T; color=:yellow)
+    print(stdout, " correctly implements ")
+    printstyled(stdout, interface, ": "; color=:blue) 
+    printstyled(stdout, res; color=_boolcolor(res))
+    println(stdout)
+end
 
 function _test(T::Type{<:Interface}, O::Type, objs::TestObjectWrapper;
     show=true, keys=nothing
 )
-
     O <: requiredtype(T) || throw(ArgumentError("$O is not a subtype of $(requiredtype(T))"))  
     check_coherent_types(O, objs)
     if show
@@ -205,7 +252,7 @@ function _showresult(io, key, pair::Pair)
     print(desc, " ")
     _showresult(io, key, res)
 end
-_showresult(io, key, res::Bool) = printstyled(io, res; color=(res ? :green : :red))
+_showresult(io, key, res::Bool) = printstyled(io, res; color=_boolcolor(res))
 function _showresult(io, key, res::AbstractArray)
     print(io, "[") 
     _showresult(io, key, first(res))
@@ -243,3 +290,5 @@ _as_tuple(xs::Tuple) = xs
 _get_type(obj) = _get_type(typeof(obj))
 _get_type(T::Type) = T
 _get_type(T::UnionAll) = _get_type(T.body)
+
+_boolcolor(res) = res ? :green : :red
