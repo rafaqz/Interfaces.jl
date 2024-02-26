@@ -50,7 +50,7 @@ end;
 
 # ## Implementation
 
-using Interfaces
+using Interfaces, Test
 
 # Now we implement the `AnimalInterface`, for a `Duck`.
 
