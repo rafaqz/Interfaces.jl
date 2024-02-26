@@ -50,7 +50,7 @@ end;
 
 # ## Implementation
 
-using Interfaces
+using Interfaces, Test
 
 # Now we implement the `AnimalInterface`, for a `Duck`.
 
@@ -99,10 +99,12 @@ using Test  #src
 @testset "Duck" begin  #src
     @test Interfaces.implements(Animals.AnimalInterface, Duck) == true  #src
     @test Interfaces.implements(Animals.AnimalInterface{:dig}, Duck) == false  #src
-    @test Interfaces.test(Animals.AnimalInterface, Duck, ducks) == true  #src
-    @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck, ducks) == true  #src
+    @test Interfaces.test(Animals.AnimalInterface, Duck) == true  #src
+    @test Interfaces.test(Animals.AnimalInterface{(:walk,:talk)}, Duck) == true  #src
+    @test Interfaces.test(Duck) == true # Test all implemented interfaces for Duck
+    @test Interfaces.test(Animals.AnimalInterface) == true # Test all implemented types for AnimalInterface
     # TODO wrap errors somehow, or just let Invariants.jl handle that.  #src
-    @test_throws Interfaces.InterfaceError Interfaces.test(Animals.AnimalInterface{:dig}, Duck, ducks)  #src
+    @test_throws Interfaces.InterfaceError Interfaces.test(Animals.AnimalInterface{:dig}, Duck)  #src
 end  #src
 
 @testset "Chicken" begin  #src
