@@ -21,6 +21,29 @@ optional_keys(T::Type{<:Interface}) = keys(components(T).optional)
 
 mandatory_keys(T::Type{<:Interface}, args...) = keys(components(T).mandatory)
 
+function _flatten_inheritance(::Type{T}) where T
+    t = if T isa Union
+        types = map(propertynames(T)) do  pn
+            _flatten_inheritance(getproperty(T, pn))
+        end
+        Union{T,types...}
+    else
+        T
+    end
+    @show T t
+    println()
+    println()
+    return t
+end
+function _flatten_inheritance(
+    ::Type{T}
+) where T<:Interface{Options,Inherited} where {Options,Inherited}
+    t = Inherited <: Nothing ? T : Union{T,Inherited}
+    @show T t
+    println()
+    return t
+end
+
 """
     test_objects(T::Type{<:Interface}, O::Type)
 
@@ -72,18 +95,17 @@ macro interface(interface_expr, type, components, description)
 
     interface_expr = if interface_expr isa Symbol
         interface_type = interface_expr
-        :(abstract type $interface_type{Components,Inherited} <: $Interfaces.Interface{Components,()} end)
+        :(abstract type $interface_type{Components,Inherited} <: $Interfaces.Interface{Components,Nothing} end)
     else
         interface_expr.head == :<: || _error(interface_expr)
         interface_type = interface_expr.args[1]
         inherits_expr = interface_expr.args[2]
         if inherits_expr isa Expr && inherits_expr.head == :curly
-            inherits_type = inherits_expr.args[1]
-            inherits_keys = inherits_expr.args[2]
-            :(abstract type $interface_type{Components,Inherited} <: $inherits_type{Components,$inherits_keys} end)
+            inherits_type = inherits_expr
+            :(abstract type $interface_type{Components,Inherited} <: $Interfaces.Interface{Components,$Interfaces._flatten_inheritance($inherits_type)} end)
         elseif inherits_expr isa Symbol
             inherits_type = inherits_expr
-            :(abstract type $interface_type{Components,Inherited} <: $inherits_type{Components,()} end)
+            :(abstract type $interface_type{Components,Inherited} <: $Interfaces.Interface{Components,$inherits_type} end)
         else
             _error(interface_expr)
         end

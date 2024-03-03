@@ -1,5 +1,5 @@
 
-@interface DictInterface <: IterationInterface AbstractDict ( # <: CollectionInterface
+@interface DictInterface <: Union{IterationInterface{(:reverse,)}} AbstractDict ( # <: CollectionInterface
     mandatory = (;
         iterate = "AbstractDict follows the IterationInterface" => a -> Interfaces.test(IterationInterface, a.d; show=false) && first(iterate(a.d)) isa Pair,
         eltype = "eltype is a Pair" => a -> eltype(a.d) <: Pair,

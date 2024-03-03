@@ -16,7 +16,10 @@ all the mandatory components of the interace are implemented.
 """
 function implements end
 implements(T::Type{<:Interface}, obj) = implements(T, typeof(obj))
-implements(::Type{<:Interface}, obj::Type) = false
+implements(T::Type{<:Interface}, obj::Type) = inherits(T, obj)
+
+function inherits end
+inherits(::Type{<:Interface}, obj) = false
 
 """
     @implements(interface, objtype, test_objects)
@@ -40,6 +43,24 @@ macro implements(interface, objtype, test_objects)
     _implements_inner(interface, objtype, test_objects)
 end
 
+inherited_type(::Type{<:Interface{<:Any,Inherits}}) where Inherits = Inherits
+inherited_basetype(::Type{T}) where T = basetypeof(inherited_type(T))
+
+inherited_optional_keys(::Type{<:Interface{Optional}}) where Optional = Optional 
+Base.@assume_effects :foldable function inherited_optional_keys(::Type{T}) where T<:Union
+    map(propertynames(T)) do  pn
+        inherited_optional_keys(getproperty(T, pn))
+    end
+end
+inherited_optional_keys(::Type) = ()
+
+function inherited_interfaces(::Type{T}) where T <: Union
+    map(propertynames(T)) do  pn
+        t = getproperty(T, pn)
+        inherited_optional_keys(t)
+    end
+end
+
 function _implements_inner(interface, objtype, test_objects; show=false)
     if interface isa Expr && interface.head == :curly
         interfacetype = interface.args[1]    
@@ -61,8 +82,11 @@ function _implements_inner(interface, objtype, test_objects; show=false)
         $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
         $Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
             $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
-        $Interfaces.implements(T::Type{<:$interfacetype{<:Any,Options}}, O::Type{<:$objtype}) where Options = 
-            $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
+        function $Interfaces.inherits(::Type{T}, ::Type{<:$objtype}) where {T<:$Interfaces.inherited_basetype($interfacetype)}
+            implementation_keys = $Interfaces.inherited_optional_keys($Interfaces.inherited_type($interfacetype))
+            user_keys = $Interfaces._as_tuple($Interfaces._user_optional_keys(T))
+            all(map(in(implementation_keys), user_keys))
+        end
         # Define which optional components the object implements
         $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
         $Interfaces.test_objects(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $test_objects
@@ -70,11 +94,29 @@ function _implements_inner(interface, objtype, test_objects; show=false)
     end |> esc
 end
 
+_user_optional_keys(::Type{<:Interface{Options}}) where Options = Options
+_user_optional_keys(::Type{<:Interface}) = ()
+
 _all_in(items::Tuple, collection) = all(map(in(collection), items))
 _all_in(item::Symbol, collection) = in(item, collection)
 
+_as_tuple(xs::Tuple) = xs
+_as_tuple(x) = (x,)
+
 struct Implemented{T<:Interface} end
 struct NotImplemented{T<:Interface} end
+
+Base.@assume_effects :foldable function basetypeof(::Type{T}) where T
+    if T isa Union
+        types = map(propertynames(T)) do pn
+            t = getproperty(T, pn)
+            getfield(parentmodule(t), nameof(t))
+        end
+        Union{types...}
+    else
+        getfield(parentmodule(T), nameof(T))
+    end
+end
 
 """
     implemented_trait(T::Type{<:Interface}, obj)
