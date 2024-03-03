@@ -201,4 +201,4 @@ array_components = (;
 
 _wrappertype(A) = Base.typename(typeof(A)).wrapper
 
-@interface ArrayInterface <: Union{IterationInterface{(:reverse,:indexing)}} AbstractArray array_components "Base Julia AbstractArray interface"
+@interface ArrayInterface <: IterationInterface{(:reverse,:indexing)} AbstractArray array_components "Base Julia AbstractArray interface"
