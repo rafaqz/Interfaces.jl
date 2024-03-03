@@ -47,7 +47,7 @@ inherited_type(::Type{<:Interface{<:Any,Inherits}}) where Inherits = Inherits
 inherited_basetype(::Type{T}) where T = basetypeof(inherited_type(T))
 
 inherited_optional_keys(::Type{<:Interface{Optional}}) where Optional = Optional 
-Base.@assume_effects :foldable function inherited_optional_keys(::Type{T}) where T<:Union
+function inherited_optional_keys(::Type{T}) where T<:Union
     map(propertynames(T)) do  pn
         inherited_optional_keys(getproperty(T, pn))
     end
@@ -109,7 +109,7 @@ _as_tuple(x) = (x,)
 struct Implemented{T<:Interface} end
 struct NotImplemented{T<:Interface} end
 
-Base.@assume_effects :foldable function basetypeof(::Type{T}) where T
+function basetypeof(::Type{T}) where T
     if T isa Union
         types = map(propertynames(T)) do pn
             t = getproperty(T, pn)
