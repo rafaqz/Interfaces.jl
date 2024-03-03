@@ -103,9 +103,6 @@ _user_optional_keys(::Type{<:Interface}) = ()
 _all_in(items::Tuple, collection) = all(map(in(collection), items))
 _all_in(item::Symbol, collection) = in(item, collection)
 
-_as_tuple(xs::Tuple) = xs
-_as_tuple(x) = (x,)
-
 struct Implemented{T<:Interface} end
 struct NotImplemented{T<:Interface} end
 

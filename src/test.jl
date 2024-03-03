@@ -144,7 +144,7 @@ function test(::Type{T}; show=true, kw...) where T
     results = map(methodlist) do m
         t = m.sig.parameters[2].var.ub
         t isa UnionAll || return true
-        interface = t.body.name.wrapper
+        interface = t.body.body.name.wrapper
         # If T implements it, test that
         if implements(interface, T)
             interface, test(interface, T; show, kw...)

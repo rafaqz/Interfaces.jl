@@ -30,17 +30,12 @@ function _flatten_inheritance(::Type{T}) where T
     else
         T
     end
-    @show T t
-    println()
-    println()
     return t
 end
 function _flatten_inheritance(
     ::Type{T}
 ) where T<:Interface{Options,Inherited} where {Options,Inherited}
     t = Inherited <: Nothing ? T : Union{T,Inherited}
-    @show T t
-    println()
     return t
 end
 

@@ -6,7 +6,7 @@ using Test
 @implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Test.GenericSet [Test.GenericSet(Set((1, 2)))]
 @implements DictInterface Test.GenericDict [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)]
 
-@test "inheritance" begin
+@testset "inheritance" begin
     # Inherited interfaces are stored in the second parameter of the supertype
     @test supertype(ArrayInterface) <: Interfaces.Interface{<:Any,IterationInterface{(:reverse, :indexing)}}
     @test supertype(DictInterface) <: Interfaces.Interface{<:Any,IterationInterface{(:reverse,)}}
