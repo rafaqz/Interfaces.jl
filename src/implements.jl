@@ -80,12 +80,15 @@ function _implements_inner(interface, objtype, test_objects; show=false)
         end
         # Define a `implements` trait stating that `objtype` implements `interface`
         $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
+        # Define implements with user-specified `Options` to check
         $Interfaces.implements(T::Type{<:$interfacetype{Options}}, O::Type{<:$objtype}) where Options = 
             $Interfaces._all_in(Options, $Interfaces.optional_keys(T, O))
+        # Define a method using `inherited_basetype` to generate the type that 
+        # will dispatch when another Interface inherits this Interface.
         function $Interfaces.inherits(::Type{T}, ::Type{<:$objtype}) where {T<:$Interfaces.inherited_basetype($interfacetype)}
             implementation_keys = $Interfaces.inherited_optional_keys($Interfaces.inherited_type($interfacetype))
             user_keys = $Interfaces._as_tuple($Interfaces._user_optional_keys(T))
-            all(map(in(implementation_keys), user_keys))
+            return all(map(in(implementation_keys), user_keys))
         end
         # Define which optional components the object implements
         $Interfaces.optional_keys(::Type{<:$interfacetype}, ::Type{<:$objtype}) = $optional_keys
