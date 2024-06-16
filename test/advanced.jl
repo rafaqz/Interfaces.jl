@@ -1,8 +1,8 @@
 # # Advanced
 
 #=
-Here's an example of multi-argument interface using groups.
-For mathematicians, a group is just a set of objects where you can perform `multiplication` and `inversion`, such that an element multiplies by its inverse yields a `neutral` element.
+Here's an example of a multi-argument interface where we implement _groups_.
+For mathematicians, a group is just a set of objects where you can perform `multiplication` and `inversion`, such that an element multiplied by its inverse yields a `neutral` element.
 
 !!! warning "Warning"
     This functionality is still experimental and might evolve in the future.
