@@ -10,6 +10,7 @@ export @implements, @interface
 
 include("arguments.jl")
 include("interface.jl")
+include("documentation.jl")
 include("implements.jl")
 include("test.jl")
 
