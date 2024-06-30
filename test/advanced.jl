@@ -116,7 +116,7 @@ expected_extended_help = """# Extended help
   * inversion stable
   * inversion works"""
 
-@test strip(Interfaces.extended_help(Group.GroupInterface)) == strip(expected_extended_help)
+@test strip(Interfaces._extended_help(Group.GroupInterface)) == strip(expected_extended_help)
 
 
 expected_docs = """```
