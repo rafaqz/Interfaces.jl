@@ -12,30 +12,31 @@ function _extended_help(interface::Type{<:Interface})
 
     println(io_buf, "# Extended help")
     !isempty(comp.mandatory) && println(io_buf, "\n## Mandatory keys:\n")
-    for key in keys(comp.mandatory)
-        values = comp.mandatory[key]
-        if values isa Tuple
-            println(io_buf, "* `$key`:")
-            for value in values
-                println(io_buf, "  * $(first(value))")
-            end
-        else
-            println(io_buf, "* `$key`: $(first(values))")
-        end
-    end
+    _list_keys(io_buf, comp.mandatory)
 
     !isempty(comp.optional) && println(io_buf, "\n## Optional keys:\n")
-    for key in keys(comp.optional)
-        values = comp.optional[key]
-        if values isa Tuple
-            println(io_buf, "* `$key`:")
-            for value in values
-                println(io_buf, "  * $(first(value))")
-            end
-        else
-            println(io_buf, "* `$key`: $(first(values))")
-        end
-    end
+    _list_keys(io_buf, comp.optional)
 
     return String(take!(io_buf))
+end
+
+function _list_keys(io::IO, component)
+    for key in keys(component)
+        print(io, "* `$key`")
+        values = component[key]
+        if values isa Tuple && all(Base.Fix2(isa, Pair), values)
+            # Such as `iterate = ("description1" => f, "description2" => g)`
+            println(io, ":")
+            for value in values
+                println(io, "  * $(first(value))")
+            end
+        elseif values isa Pair
+            # Such as `iterate = "description" => f`
+            println(io, ": $(first(values))")
+        else
+            # all other cases, like `iterate = f`
+            println(io)
+        end
+    end
+    return nothing
 end
