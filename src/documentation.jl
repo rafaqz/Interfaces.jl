@@ -1,10 +1,10 @@
-function _help_header(interface::Type{<:Interface})
+function _help_header(@nospecialize(interface::Type{<:Interface}))
     m_keys = mandatory_keys(interface)
     o_keys = optional_keys(interface)
     return "An Interfaces.jl `Interface` with mandatory components `$m_keys` and optional components `$o_keys`."
 end
 
-function _extended_help(interface::Type{<:Interface})
+function _extended_help(@nospecialize(interface::Type{<:Interface}))
     comp = components(interface)
 
     io_buf = IOBuffer()
@@ -20,7 +20,7 @@ function _extended_help(interface::Type{<:Interface})
     return String(take!(io_buf))
 end
 
-function _list_keys(io::IO, component)
+function _list_keys(io::IO, @nospecialize(component))
     for key in keys(component)
         print(io, "* `$key`")
         values = component[key]
