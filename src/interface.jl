@@ -81,8 +81,8 @@ macro interface(interface::Symbol, type, components, description)
         # Generate a docstring for the interface
         let description=$description,
             interfacesym=$(QuoteNode(interface)),
-            header=$Interfaces.header($interface),
-            extended_help=$Interfaces.extended_help($interface)
+            header=$Interfaces._help_header($interface),
+            extended_help=$Interfaces._extended_help($interface)
             @doc """
                 $("   ") $interfacesym
 

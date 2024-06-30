@@ -1,10 +1,10 @@
-function header(interface::Type{<:Interface})
+function _help_header(interface::Type{<:Interface})
     m_keys = mandatory_keys(interface)
     o_keys = optional_keys(interface)
     return "An Interfaces.jl `Interface` with mandatory components `$m_keys` and optional components `$o_keys`."
 end
 
-function extended_help(interface::Type{<:Interface})
+function _extended_help(interface::Type{<:Interface})
     comp = components(interface)
 
     io_buf = IOBuffer()
