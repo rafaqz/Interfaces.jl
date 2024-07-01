@@ -102,3 +102,6 @@ using Test  #src
 @test Interfaces.test(Group.GroupInterface, Float64)  #src
 @test !Interfaces.test(Group.GroupInterface, Int, int_pairs)  #src
 @test_throws ArgumentError Interfaces.test(Group.GroupInterface, Float64, int_pairs)  #src
+
+include("test_generated_docs.jl")  #src
+

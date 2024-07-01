@@ -81,14 +81,16 @@ macro interface(interface::Symbol, type, components, description)
         # Generate a docstring for the interface
         let description=$description,
             interfacesym=$(QuoteNode(interface)),
-            m_keys=$Interfaces.mandatory_keys($interface),
-            o_keys=$Interfaces.optional_keys($interface)
+            header=$Interfaces._help_header($interface),
+            extended_help=$Interfaces._extended_help($interface)
             @doc """
                 $("   ") $interfacesym
 
-            An Interfaces.jl `Interface` with mandatory components `$m_keys` and optional components `$o_keys`.
+            $header
 
             $description
+
+            $extended_help
             """ $interface 
         end
     end |> esc
