@@ -105,6 +105,7 @@ using Test  #src
     @test Interfaces.test(Animals.AnimalInterface) == true # Test all implemented types for AnimalInterface
     # TODO wrap errors somehow, or just let Invariants.jl handle that.  #src
     @test_throws Interfaces.InterfaceError Interfaces.test(Animals.AnimalInterface{:dig}, Duck)  #src
+    @test Interfaces.test_objects(Animals.AnimalInterface) == Dict(Duck => ducks)
 end  #src
 
 @testset "Chicken" begin  #src

@@ -18,6 +18,33 @@ function implements end
 implements(T::Type{<:Interface}, obj) = implements(T, typeof(obj))
 implements(::Type{<:Interface}, obj::Type) = false
 
+function test_objects(::Type{T}) where T<:Interface
+    methodlist = methods(Interfaces.test_objects, Tuple{Type{T},Any})
+    objects = Dict{Type,Any}()
+    # Check that all found methods are either unrequired, or pass their tests
+    for m in (methodlist)
+        (m.module == Interfaces) && continue
+        # We define this signature in the @interface macro so we know it is this consistent.
+        # There may be some methods to help with these things?
+        
+        # Handle either Type or UnionAll for the method signature parameters
+        b = m.sig isa UnionAll ? m.sig.body : m.sig
+
+        # Skip the fallback methods
+        b.parameters[2] == Type{<:Interface} && continue
+
+        # Skip the Type versions of implements and keep the UnionAll
+        t = b.parameters[2].var.ub
+        t isa UnionAll || return nothing, true
+
+        interface = t.body.name.wrapper
+        implementation = b.parameters[3].var.ub
+        implementation == Any && return continue
+        objects[implementation] = test_objects(interface, implementation)
+    end
+    return objects
+end
+
 """
     @implements(interface, objtype, test_objects)
 
