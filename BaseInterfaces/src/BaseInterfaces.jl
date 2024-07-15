@@ -1,5 +1,11 @@
 module BaseInterfaces
 
+@doc let
+    path = joinpath(dirname(@__DIR__), "README.md")
+    include_dependency(path)
+    read(path, String)
+end BaseInterfaces
+
 using Interfaces
 
 import Interfaces: test, test_objects, implements, description, components, requiredtype, @implements

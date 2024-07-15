@@ -15,8 +15,9 @@ Currently this includes:
 - `AbstractDict` interface: `DictInterface`
 - `AbstractString` interface: `StringInterface`
 
-None of these should be considered either complete or authoritative,
-but they may be helpful in testing your objects basically conform.
+None of these should be considered complete or authoritative, due both to 
+the size of the task and that many of the interfaces not documented in Base 
+Julia. However, they may be helpful in testing your objects basically conform. 
 Please make issues and PRs with missing behaviours if you find them.
 
 Declaring that it follows the interface is done with:
