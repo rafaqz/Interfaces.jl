@@ -13,22 +13,25 @@ Currently this includes:
 - `AbstractArray` interface: `ArrayInterface`
 - `AbstractSet` interface: `SetInterface`
 - `AbstractDict` interface: `DictInterface`
+- `AbstractString` interface: `StringInterface`
 
-
-Testing your object follows the interfaces is as simple as:
-
-```julia
-using BaseInterfaces, Interfaces
-Interfaces.tests(DictInterface, MyDict, [mydict1, mydict2, ...])
-```
+None of these should be considered either complete or authoritative,
+but they may be helpful in testing your objects basically conform.
+Please make issues and PRs with missing behaviours if you find them.
 
 Declaring that it follows the interface is done with:
 
 ```julia
-@implements DictInterface{(:component1, :component2)} MyDict
+@implements DictInterface{(:component1, :component2)} MyDict [MyDict(some_values...), MyDict(other_values...)]
 ```
 
-Where components can be chosen from `Interfaces.optional_keys(DictInterface)`.
+Optional components can be chosen from `Interfaces.optional_keys(DictInterface)`.
+
+After this you can easily test it with:
+
+```julia
+Interfaces.test(DictInterface, MyDict)
+```
 
 See [the docs](https://rafaqz.github.io/Interfaces.jl/stable/) for use.
 
