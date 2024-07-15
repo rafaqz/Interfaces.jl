@@ -11,8 +11,8 @@ set_components = (;
         isempty = "defines `isempty` and testdata is not empty" => !isempty,
         eltype = "elements eltype of set `s` are subtypes of `eltype(s)`" => s -> typeof(first(iterate(s))) <: eltype(s),
         length = "set defines length and test object has length larger than zero" => s -> length(s) isa Int && length(s) > 0,
+        # This is kind of unsatisfactory as interface inheritance, but its simple
         iteration = "follows the IterationInterface" => s -> Interfaces.test(IterationInterface, s; show=false),
-        in = "`in` is true for elements in set" => s -> all(x -> in(x, s), s),
     ),
     optional = (;
         copy = "creates an identical object with the same values, that is not the same object" => 
@@ -62,7 +62,7 @@ set_components = (;
             push!(s, x)
             in(x, s)
         end,
-        # No real way to test this does anything
+        # No real way to test this does anything?
         sizehint! = "can set a size hint" => s -> (sizehint!(s, 10); true),
     )
 )

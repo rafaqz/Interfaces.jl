@@ -5,11 +5,12 @@ using Test
 # Test some Test objects
 @implements SetInterface{(:empty,:emptymutable,:hasfastin,:intersect,:union,:sizehint!)} Test.GenericSet [Test.GenericSet(Set((1, 2)))]
 @implements DictInterface Test.GenericDict [Arguments(d=Test.GenericDict(Dict(:a => 1, :b => 2)), k=:c, v=3)]
+@implements StringInterface Test.GenericString [Test.GenericString("abc")]
 
 # Test all interfaces
 @test Interfaces.test()
 
-# Test all interfaaces in BaseInterfaces
+# Test all interfaces in BaseInterfaces
 @test Interfaces.test(BaseInterfaces)
 @test Interfaces.test(Main)
 
@@ -18,12 +19,14 @@ using Test
 @test Interfaces.test(DictInterface, BaseInterfaces)
 @test Interfaces.test(IterationInterface, BaseInterfaces)
 @test Interfaces.test(SetInterface, BaseInterfaces)
+@test Interfaces.test(StringInterface, BaseInterfaces)
 
 # Now test all the interfaces implementations independent of where they are implemented
 @test Interfaces.test(ArrayInterface)
 @test Interfaces.test(DictInterface)
 @test Interfaces.test(IterationInterface)
 @test Interfaces.test(SetInterface)
+@test Interfaces.test(StringInterface)
 
 @test_throws ArgumentError Interfaces.test(SetInterface{:empty})
 
