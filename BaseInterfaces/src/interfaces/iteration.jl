@@ -32,11 +32,11 @@ EltypeUnknown()	(none)
     # Mandatory conditions: these must be met by all types
     # that implement the interface.
     mandatory = (
+        isempty = "test iterator is not empty" => x -> !isempty(x),
         iterate = (
-            "test iterator is not empty" => x -> !isempty(x),
-            "iterate does not return `nothing`" => x -> !isnothing(iterate(x)),
-            "iterate returns a Tuple" => x -> iterate(x) isa Tuple{<:Any,<:Any},
-            "iterate returns a Tuple" => x -> iterate(x, last(iterate(x))) isa Union{Nothing,Tuple{<:Any,<:Any}},
+            "`iterate` does not return `nothing`" => x -> !isnothing(iterate(x)),
+            "`iterate` returns a `Tuple`" => x -> iterate(x) isa Tuple{<:Any,<:Any},
+            "second `iterate` returns a `Tuple` or `Nothing`" => x -> iterate(x, last(iterate(x))) isa Union{Nothing,Tuple{<:Any,<:Any}},
         ),
         isiterable = x -> Base.isiterable(typeof(x)),
         eltype = x -> begin
@@ -72,7 +72,7 @@ EltypeUnknown()	(none)
                 error("IteratorSize returns $sizetrait, allowed options are: `HasLength`, `HasLength`, `IsInfinite`, `SizeUnknown`")
             end
         end,
-        in = x -> first(x) in x,
+        in = "`in` returns true for all values in x" => x -> all(a -> a in x, x),
     ),
     # Optional conditions. These should be specified in the
     # interface type if an object implements them: IterationInterface{(:reverse,:indexing)}
@@ -95,4 +95,8 @@ EltypeUnknown()	(none)
              end,
         ),
     )
-) "An interface for Base Julia iteration"
+) """
+An interface for Base Julia iteration. 
+
+Test objects must not be empty, so that `isempty(obj) == false`.
+"""
