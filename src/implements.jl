@@ -50,8 +50,7 @@ end
 
 Declare that an interface implements an interface, or multipleinterfaces.
 
-The macro can only be used once per module for any one type. To define
-multiple interfaces a type implements, combine them in square brackets.
+The macro can only be used once per module for any one type.
 
 # Example
 
