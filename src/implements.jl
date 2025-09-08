@@ -81,7 +81,7 @@ function _implements_inner(interface, objtype, test_objects; show=false)
     quote
         # Chreck that the type matches
         let objtype = $objtype, interface=$interface
-            objtype <: Interfaces.requiredtype(interface) || throw(ArgumentError("$objtype is not a subtype of $(Interfaces.requiredtype(interface))"))  
+            objtype <: $Interfaces.requiredtype(interface) || throw(ArgumentError("$objtype is not a subtype of $(Interfaces.requiredtype(interface))"))  
         end
         # Define a `implements` trait stating that `objtype` implements `interface`
         $Interfaces.implements(::Type{<:$interfacetype}, ::Type{<:$objtype}) = true
