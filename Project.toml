@@ -1,7 +1,7 @@
 name = "Interfaces"
 uuid = "85a1e053-f937-4924-92a5-1367d23b7b87"
 authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
-version = "0.3.2"
+version = "0.3.3"
 
 [compat]
 Aqua = "0.8"
